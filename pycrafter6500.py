@@ -1,4 +1,26 @@
-import usb
+"""
+Pycrafter 6500 is a native Python controller for TI's dlplcr6500evm.
+
+The script requires Pyusb and Numpy to be present in your Python environment.
+The test script included requires the Python Image Library (PIL or pillow)
+for opening a test image. The device must have libusb drivers installed,
+for Windows users we suggest to install them through Zadig
+ (http://zadig.akeo.ie/), and selecting the libusb_win32 driver.
+
+If you use this library for scientific publications, please consider mentioning
+the library and citing our work (https://doi.org/10.1364/OE.25.000949).
+
+Features list:
+--------------
+
+Basic control of the evaluation module (modes selection, idle toggle,
+start/pause/stop sequences).
+Upload of a sequence of EXCLUSIVELY BINARY images for "patterns on the fly"
+mode, with independent control of exposure times, dark times, triggers and
+repetitions number.
+
+"""
+
 import usb.core
 import usb.util
 import time
@@ -272,6 +294,7 @@ def encode(image):
 
     return bit_string, byte_count
 
+
 class DMD():
     """
     DMD controller Class.
@@ -284,24 +307,44 @@ class DMD():
     Methods
     -------
     usb_command()
+        Send a command to the controler via usb.
     check_for_errors()
+        Check if any error from the controler can be received.
     read_reply()
+        Read incoming data from the controler via usb.
     idle_on()
+        Activate the idle mode of the controler.
     idle_off()
+        Deactivate the idle mode of the controler.
     stand_by()
+        Set controler into standby mode.
     wake_up()
+        Wake up controler from standby mode.
     reset()
+        Reset the controler.
     test_read()
+       Test to receive data from controler.
     test_write()
+        Test to write data to the controler.
     change_mode()
+        Set the operating mode of the controler.
     start_sequence()
+        Start a image sequence.
     pause_sequence()
+        Pause image sequence.
     stop_sequence()
+        Stop image sequence.
     configure_lut()
+        Configure LUT (Look Up Table) of the controler.
     define_pattern()
+        Define a pattern to display.
     set_bmp()
+        Prepare controler for uploading .bmp image.
     load_bmp()
+        Upload .bmp image to controler.
     define_sequence()
+        Define a image sequence to display.
+
     """
 
     def __init__(self):
@@ -316,8 +359,6 @@ class DMD():
         self.dev = usb.core.find(idVendor=0x0451, idProduct=0xc900)
         self.dev.set_configuration()
         self.ans = []
-
-    # standard usb command function
 
     def usb_command(self, mode, byte_sequence, com1, com2, data=None):
         """
@@ -394,85 +435,235 @@ class DMD():
 
         self.ans = self.dev.read(0x81, 64)
 
-    ## functions for checking error reports in the dlp answer
+    def check_for_errors(self):
+        """
+        Check error reports in the DLP module answer.
 
-    def checkforerrors(self):
-        self.command('r', 0x22, 0x01, 0x00, [])
+        Returns
+        -------
+        None.
+
+        """
+        self.usb_command('r', 0x22, 0x01, 0x00, [])
         if self.ans[6] != 0:
             print(self.ans[6])
 
-        ## function printing all of the dlp answer
+    def read_reply(self):
+        """
+        Print all of the dlp answer.
 
-    def readreply(self):
+        Returns
+        -------
+        None.
+
+        """
         for i in self.ans:
             print(hex(i))
 
-    ## functions for idle mode activation
-
     def idle_on(self):
-        self.command('w', 0x00, 0x02, 0x01, [int('00000001', 2)])
-        self.checkforerrors()
+        """
+        Activate idle mode.
+
+        Returns
+        -------
+        None.
+
+        """
+        self.usb_command('w', 0x00, 0x02, 0x01, [int('00000001', 2)])
+        self.check_for_errors()
 
     def idle_off(self):
-        self.command('w', 0x00, 0x02, 0x01, [int('00000000', 2)])
-        self.checkforerrors()
+        """
+        Deactivate idle mode.
 
-    ## functions for power management
+        Returns
+        -------
+        None.
 
-    def standby(self):
+        """
+        self.usb_command('w', 0x00, 0x02, 0x01, [int('00000000', 2)])
+        self.check_for_errors()
+
+    def stand_by(self):
+        """
+        Activate standby mode.
+
+        Returns
+        -------
+        None.
+
+        """
         self.command('w', 0x00, 0x02, 0x00, [int('00000001', 2)])
         self.checkforerrors()
 
-    def wakeup(self):
-        self.command('w', 0x00, 0x02, 0x00, [int('00000000', 2)])
-        self.checkforerrors()
+    def wake_up(self):
+        """
+        Activate from stand by mode.
+
+        Returns
+        -------
+        None.
+
+        """
+        self.usb_command('w', 0x00, 0x02, 0x00, [int('00000000', 2)])
+        self.check_for_errors()
 
     def reset(self):
-        self.command('w', 0x00, 0x02, 0x00, [int('00000010', 2)])
-        self.checkforerrors()
+        """
+        Reset the DLP controler.
 
-    ## test write and read operations, as reported in the dlpc900 programmer's guide
+        Returns
+        -------
+        None.
 
-    def testread(self):
-        self.command('r', 0xff, 0x11, 0x00, [])
-        self.readreply()
+        """
+        self.usb_command('w', 0x00, 0x02, 0x00, [int('00000010', 2)])
+        self.read_reply()
 
-    def testwrite(self):
-        self.command('w', 0x22, 0x11, 0x00,
-                     [0xff, 0x01, 0xff, 0x01, 0xff, 0x01])
-        self.checkforerrors()
+    def test_read(self):
+        """
+        Test read operation. Testing to receive data from the DLP controler.
 
-    ## some self explaining functions
+        Returns
+        -------
+        None.
 
-    def changemode(self, mode):
-        self.command('w', 0x00, 0x1a, 0x1b, [mode])
-        self.checkforerrors()
+        """
+        self.usb_command('r', 0xff, 0x11, 0x00, [])
+        self.read_reply()
 
-    def startsequence(self):
-        self.command('w', 0x00, 0x1a, 0x24, [2])
-        self.checkforerrors()
+    def test_write(self):
+        """
+        Test write operation. Testing to send data to the DLP controler.
 
-    def pausesequence(self):
-        self.command('w', 0x00, 0x1a, 0x24, [1])
-        self.checkforerrors()
+        Returns
+        -------
+        None.
 
-    def stopsequence(self):
-        self.command('w', 0x00, 0x1a, 0x24, [0])
-        self.checkforerrors()
+        """
+        self.usb_command('w', 0x22, 0x11, 0x00,
+                         [0xff, 0x01, 0xff, 0x01, 0xff, 0x01])
+        self.check_for_errors()
 
-    def configurelut(self, imgnum, repeatnum):
-        img = convert_num_to_bit_string(imgnum, 11)
-        repeat = convert_num_to_bit_string(repeatnum, 32)
+    def change_mode(self, mode):
+        """
+        Select the operating mode of the DLP controler.
+
+        Changes the dmd operating mode:
+            mode=0 for normal video mode
+            mode=1 for pre stored pattern mode
+            mode=2 for video pattern mode
+            mode=3 for pattern on the fly mode
+
+        Parameters
+        ----------
+        mode : int
+            The operating mode.
+
+        Returns
+        -------
+        None.
+
+        """
+        self.usb_command('w', 0x00, 0x1a, 0x1b, [mode])
+        self.check_for_errors()
+
+    def start_sequence(self):
+        """
+        Start a image sequence.
+
+        Returns
+        -------
+        None.
+
+        """
+        self.usb_command('w', 0x00, 0x1a, 0x24, [2])
+        self.check_for_errors()
+
+    def pause_sequence(self):
+        """
+        Pause current displayed sequence.
+
+        Returns
+        -------
+        None.
+
+        """
+        self.usb_command('w', 0x00, 0x1a, 0x24, [1])
+        self.check_for_errors()
+
+    def stop_sequence(self):
+        """
+        Stop current displayed sequence.
+
+        Returns
+        -------
+        None.
+
+        """
+        self.usb_command('w', 0x00, 0x1a, 0x24, [0])
+        self.check_for_errors()
+
+    def configure_lut(self, image_number, repetition_number):
+        """
+        Configure the LUT (Look Up Table) of the controler.
+
+        Parameters
+        ----------
+        image_number : int
+            Number of images of a image sequence.
+        repetition_number : int
+            Number, how often a image seqence has to be repeated.
+
+        Returns
+        -------
+        None.
+
+        """
+        img = convert_num_to_bit_string(image_number, 11)
+        repeat = convert_num_to_bit_string(repetition_number, 32)
 
         string = repeat + '00000' + img
 
         bytes = bits_to_bytes(string)
 
         self.command('w', 0x00, 0x1a, 0x31, bytes)
-        self.checkforerrors()
+        self.check_for_errors()
 
-    def definepattern(self, index, exposure, bitdepth, color, triggerin,
-                      darktime, triggerout, patind, bitpos):
+    def define_pattern(self, index, exposure, bit_depth, color, trigger_in,
+                       dark_time, trigger_out, pat_ind, bit_pos):
+        """
+        Define a pattern that has to be displayed.
+
+        Parameters
+        ----------
+        index : int
+            Index from the image sequence to display.
+        exposure : int numpy array
+            Numpy array containing exposure time values in [us].
+        bit_depth : int
+            Bit depth of the images.
+        color : str
+            Color to display. Seems like it should be '111' for the blue
+            color (UV Led).
+        trigger_in : boolean numpy array
+            Numpy array of boolean values determine wheter to wait for an
+            external Trigger before exposure.
+        dark_time : int numpy array
+            Numpy array containing dark time values in [us].
+        trigger_out : int
+            Numpy array of boolean values determine wheter to wait for an
+            external Trigger after exposure.
+        pat_ind : int
+            Pattern index?
+        bit_pos : int
+            Bit position?
+
+        Returns
+        -------
+        None.
+
+        """
         payload = []
         index = convert_num_to_bit_string(index, 16)
         index = bits_to_bytes(index)
@@ -481,40 +672,62 @@ class DMD():
 
         exposure = convert_num_to_bit_string(exposure, 24)
         exposure = bits_to_bytes(exposure)
+
         for i in range(len(exposure)):
             payload.append(exposure[i])
-        optionsbyte = ''
-        optionsbyte += '1'
-        bitdepth = convert_num_to_bit_string(bitdepth - 1, 3)
-        optionsbyte = bitdepth + optionsbyte
-        optionsbyte = color + optionsbyte
-        if triggerin:
-            optionsbyte = '1' + optionsbyte
+
+        options_byte = ''
+        options_byte += '1'
+        bit_depth = convert_num_to_bit_string(bit_depth - 1, 3)
+        options_byte = bit_depth + options_byte
+        options_byte = color + options_byte
+
+        if trigger_in:
+            options_byte = '1' + options_byte
         else:
-            optionsbyte = '0' + optionsbyte
+            options_byte = '0' + options_byte
 
-        payload.append(bits_to_bytes(optionsbyte)[0])
+        payload.append(bits_to_bytes(options_byte)[0])
 
-        darktime = convert_num_to_bit_string(darktime, 24)
-        darktime = bits_to_bytes(darktime)
-        for i in range(len(darktime)):
-            payload.append(darktime[i])
+        dark_time = convert_num_to_bit_string(dark_time, 24)
+        dark_time = bits_to_bytes(dark_time)
 
-        triggerout = convert_num_to_bit_string(triggerout, 8)
-        triggerout = bits_to_bytes(triggerout)
-        payload.append(triggerout[0])
+        for i in range(len(dark_time)):
+            payload.append(dark_time[i])
 
-        patind = convert_num_to_bit_string(patind, 11)
-        bitpos = convert_num_to_bit_string(bitpos, 5)
-        lastbits = bitpos + patind
-        lastbits = bits_to_bytes(lastbits)
-        for i in range(len(lastbits)):
-            payload.append(lastbits[i])
+        trigger_out = convert_num_to_bit_string(trigger_out, 8)
+        trigger_out = bits_to_bytes(trigger_out)
+        payload.append(trigger_out[0])
 
-        self.command('w', 0x00, 0x1a, 0x34, payload)
-        self.checkforerrors()
+        pat_ind = convert_num_to_bit_string(pat_ind, 11)
+        bit_pos = convert_num_to_bit_string(bit_pos, 5)
+        last_bits = bit_pos + pat_ind
+        last_bits = bits_to_bytes(last_bits)
 
-    def setbmp(self, index, size):
+        for i in range(len(last_bits)):
+            payload.append(last_bits[i])
+
+        self.usb_command('w', 0x00, 0x1a, 0x34, payload)
+        self.check_for_errors()
+
+    def set_bmp(self, index, size):
+        """
+        Send message to controler, that a .bmp will be uploaded.
+
+        Not Sure about that.
+
+        Parameters
+        ----------
+        index : int
+            Current index of the image sequence.
+        size : int
+            Length of the image as bytes.
+
+        Returns
+        -------
+        None.
+
+        """
         payload = []
 
         index = convert_num_to_bit_string(index, 5)
@@ -528,101 +741,151 @@ class DMD():
         for i in range(len(total)):
             payload.append(total[i])
 
-        self.command('w', 0x00, 0x1a, 0x2a, payload)
-        self.checkforerrors()
+        self.usb_command('w', 0x00, 0x1a, 0x2a, payload)
+        self.check_for_errors()
 
-    ## bmp loading function, divided in 56 bytes packages
-    ## max  hid package size=64, flag bytes=4, usb command bytes=2
-    ## size of package description bytes=2. 64-4-2-2=56
+    def load_bmp(self, image, size):
+        """
+        Upload a .bmp image.
 
-    def bmpload(self, image, size):
+        BMP loading function, divided in 56 bytes packages.
+        Max  hid package size = 64, flag bytes = 4, usb command bytes = 2.
+        Size of package description bytes = 2. 64 - 4 - 2 - 2 = 56.
 
-        t = time.clock()
+        Parameters
+        ----------
+        image : str numpy array
+            Numpy array representing the image. Bit depth 8. As bit string due
+            to encoding beforehand.
+        size : int
+            Number of bytes of the image.
 
-        print("Image Length: %d" % len(image))
-        packnum = size / 504 + 1
+        Returns
+        -------
+        None.
+
+        """
+        t = time.clock()  # count time
+
+        # print("Image Length: %d" % len(image))
+        pack_num = size / 504 + 1
 
         counter = 0
 
-        for i in range(int(packnum)):
+        for i in range(int(pack_num)):
             if i % 100 == 0:
-                print(i, packnum)
+                print(i, pack_num)
+
             payload = []
-            if i < packnum - 1:
+
+            if i < pack_num - 1:
                 leng = convert_num_to_bit_string(504, 16)
                 bits = 504
             else:
                 leng = convert_num_to_bit_string(size % 504, 16)
                 bits = size % 504
+
             leng = bits_to_bytes(leng)
+
             for j in range(2):
                 payload.append(leng[j])
+
             for j in range(bits):
-                # print(j)
 
                 """
-                    This if statement blocks the index counter if it gets too
-                    big
+                This if statement blocks the index counter if it gets too
+                big.
                 """
                 if counter < len(image):
                     payload.append(image[counter])
+
                 counter += 1
                 # print("Counter: %d" % counter)
-            self.command('w', 0x11, 0x1a, 0x2b, payload)
+                # print(j)
+            self.usb_command('w', 0x11, 0x1a, 0x2b, payload)
 
-            self.checkforerrors()
-        print(time.clock() - t)
+            self.check_for_errors()
+        print(time.clock() - t)  # print time
 
-    def defsequence(self, images, exp, ti, dt, to, rep):
+    def define_sequence(self, images, exposure, trigger_in, dark_time,
+                        trigger_out, repetition_number):
+        """
+        Define a sequence of images to display.
 
-        self.stopsequence()
+        Parameters
+        ----------
+        images : int numpy array
+            Numpy array containing the image information. Bit depth is 8.
+        exposure : int numpy array
+            Exposure time values in a numpy array in [us].
+        trigger_in : boolean numpy array
+            Numpy array of boolean values determine wheter to wait for an
+            external Trigger before exposure.
+        dark_time : int numpy array
+            Numpy array containing dark time values in [us]..
+        trigger_out : boolean numpy array
+            Numpy array of boolean values determine wheter to wait for an
+            external Trigger after exposure..
+        repetition_number : int
+            Value defininf how often the image sequence is repeated. Set this
+            value to 0 for an infinit loop.
+
+        Returns
+        -------
+        None.
+
+        """
+        self.stop_sequence()
 
         arr = []
 
         for i in images:
-            arr.append(i)
-
-        ##        arr.append(numpy.ones((1080,1920),dtype='uint8'))
+            arr.append(i)  # arr.append(numpy.ones((1080,1920),dtype='uint8'))
 
         num = len(arr)
 
-        encodedimages = []
+        encoded_images = []
         sizes = []
 
         for i in range(int((num - 1) / 24 + 1)):
             print('merging...')
-            if i < ((num - 1) / 24):
-                imagedata = merge_images(arr[i * 24:(i + 1) * 24])
-            else:
-                imagedata = merge_images(arr[i * 24:])
-            print('encoding...')
-            imagedata, size = encode(imagedata)
 
-            encodedimages.append(imagedata)
+            if i < ((num - 1) / 24):
+                image_data = merge_images(arr[i * 24:(i + 1) * 24])
+            else:
+                image_data = merge_images(arr[i * 24:])
+
+            print('encoding...')
+            image_data, size = encode(image_data)
+
+            encoded_images.append(image_data)
             sizes.append(size)
 
             if i < ((num - 1) / 24):
                 for j in range(i * 24, (i + 1) * 24):
-                    self.definepattern(j, exp[j], 1, '111', ti[j], dt[j],
-                                       to[j], i, j - i * 24)
+                    self.define_pattern(j, exposure[j], 1, '111',
+                                        trigger_in[j], dark_time[j],
+                                        trigger_out[j], i, j - i * 24)
             else:
                 for j in range(i * 24, num):
-                    self.definepattern(j, exp[j], 1, '111', ti[j], dt[j],
-                                       to[j], i, j - i * 24)
+                    self.define_pattern(j, exposure[j], 1, '111',
+                                        trigger_in[j], dark_time[j],
+                                        trigger_out[j], i, j - i * 24)
 
-        self.configurelut(num, rep)
+        self.configure_lut(num, repetition_number)
 
         for i in range(int((num - 1) / 24 + 1)):
-            self.setbmp(int((num - 1) / 24 - i),
-                        sizes[int((num - 1) / 24 - i)])
+            self.set_bmp(int((num - 1) / 24 - i),
+                         sizes[int((num - 1) / 24 - i)])
 
             print('uploading...')
 
             """
-                Seems like that the size index is too big. This results
-                in a error in the bmpload() function.
-                A if statement in the bmpload() function was implemented.
-                This if statement blocks index, that is too long!
+            Seems like that the size index is too big. This results
+            in a error in the bmpload() function.
+            A if statement in the bmpload() function was implemented.
+            This if statement blocks index, that is too long!
             """
-            self.bmpload(encodedimages[int((num - 1) / 24 - i)],
-                         sizes[int((num - 1) / 24 - i)])
+
+            self.load_bmp(encoded_images[int((num - 1) / 24 - i)],
+                          sizes[int((num - 1) / 24 - i)])
