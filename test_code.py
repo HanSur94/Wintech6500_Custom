@@ -2,21 +2,27 @@ import pycrafter6500
 import numpy
 import PIL.Image
 
+# load in the image
+# divide by 129, to convert 8 bit picture to a binary picture ?
 images = [numpy.asarray(PIL.Image.open("testimage.tif")) / 129]
 
-# divide by 129, to convert 8 bit picture to a binary picture
-
+# create a DMD class object
 dlp = pycrafter6500.DMD()
 
-dlp.stopsequence()
+# stop any already existing sequence
+dlp.stop_sequence()
 
-dlp.changemode(3)
+# change to pattern on the fly mode
+dlp.change_mode(3)
 
+# sequence parameters
 exposure = [1000000] * 30
 dark_time = [0] * 30
 trigger_in = [False] * 30
 trigger_out = [1] * 30
 
-dlp.defsequence(images, exposure, trigger_in, dark_time, trigger_out, 0)
+# define sequence
+dlp.define_sequence(images, exposure, trigger_in, dark_time, trigger_out, 0)
 
-dlp.startsequence()
+# start sequence
+dlp.start_sequence()

@@ -20,7 +20,6 @@ mode, with independent control of exposure times, dark times, triggers and
 repetitions number.
 
 """
-
 import usb.core
 import usb.util
 import time
@@ -154,12 +153,21 @@ def encode(image):
     for i in range(8):
         bit_string.append(0xff)
 
-    for i in range(4):  # black curtain
+    """
+    Setting the background color to black.
+    """
+    for i in range(4):
         bit_string.append(0x00)
 
     bit_string.append(0x00)
 
-    bit_string.append(0x02)  # enhanced rle
+    """
+    Enhanced run length encoding
+    To achieve higher compression ratios, this compression format takes
+    advantage of the similarities from line-to-line and uses one or two
+    bytes to encode the length.
+    """
+    bit_string.append(0x02)
 
     bit_string.append(0x01)
 
@@ -344,6 +352,19 @@ class DMD():
         Upload .bmp image to controler.
     define_sequence()
         Define a image sequence to display.
+
+    Planned Methods
+    ---------------
+    long_axis_image_flip()
+    short_axis_image_flip()
+    dmd_park()
+    dmd_unpark()
+    pwm_setup()
+    blue_led_control()
+    get_hardware_status()
+    get_system_status()
+    get_main_status()
+    get_version
 
     """
 
@@ -607,6 +628,8 @@ class DMD():
     def configure_lut(self, image_number, repetition_number):
         """
         Configure the LUT (Look Up Table) of the controler.
+
+        For the Pattern On-The-Fly mode.
 
         Parameters
         ----------
