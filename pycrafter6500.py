@@ -380,6 +380,7 @@ class DMD():
         self.dev = usb.core.find(idVendor=0x0451, idProduct=0xc900)
         self.dev.set_configuration()
         self.ans = []
+        self.encoded_image = []
 
     def usb_command(self, mode, byte_sequence, com1, com2, data=None):
         """
@@ -514,8 +515,8 @@ class DMD():
         None.
 
         """
-        self.command('w', 0x00, 0x02, 0x00, [int('00000001', 2)])
-        self.checkforerrors()
+        self.usb_command('w', 0x00, 0x02, 0x00, [int('00000001', 2)])
+        self.check_for_errors()
 
     def wake_up(self):
         """
@@ -650,7 +651,7 @@ class DMD():
 
         bytes = bits_to_bytes(string)
 
-        self.command('w', 0x00, 0x1a, 0x31, bytes)
+        self.usb_command('w', 0x00, 0x1a, 0x31, bytes)
         self.check_for_errors()
 
     def define_pattern(self, index, exposure, bit_depth, color, trigger_in,
@@ -863,7 +864,8 @@ class DMD():
         arr = []
 
         for i in images:
-            arr.append(i)  # arr.append(numpy.ones((1080,1920),dtype='uint8'))
+            arr.append(i)  
+            #arr.append(numpy.ones((1080,1920),dtype='uint8'))
 
         num = len(arr)
 
