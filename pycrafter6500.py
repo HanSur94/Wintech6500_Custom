@@ -24,7 +24,67 @@ import usb.core
 import usb.util
 import time
 import numpy
+import PIL.Image
+import os
 
+
+def load_image_sequence(image_folder_name, print_image_name=False):
+    """
+    Loads in multiple images from a folder.
+
+    Parameters
+    ----------
+    image_folder_name : str
+         The local path to the folder. E.g.: Images are in the subfolder 
+        "image_folder" in the local directory of the running script. Therefore
+        the image_folder_name must be: "./image_folder/" .
+    print_image_name : boolean, optional
+        If True, then the image path will be printed in the console.
+        The default is False.
+
+    Returns
+    -------
+    image_sequence : numpy array list
+        A list of numpy array's containing the image data.
+
+    """
+    # init image sequence list
+    image_sequence = []
+    
+    # fetch all files of the image_folder_name
+    for filename in os.listdir(image_folder_name):
+        
+        # print file name if needed
+        if print_image_name:
+            print(os.path.join(image_folder_name,filename))
+            
+        # load image and append to list
+        image_sequence.append(
+            load_image(os.path.join(image_folder_name,filename))[0])
+        
+    return image_sequence
+
+
+def load_image(image_name):
+    """
+    Loads in a single image.
+
+    Parameters
+    ----------
+    image_name : str
+        The Path & Name of the image. E.g.: The images is in the subfolder 
+        "image_folder" in the local directory of the running script and the 
+        name of the image is "test_image.png". Therefore
+        the image_name must be: "./image_folder/test_image.png" .
+
+    Returns
+    -------
+    list
+        The image as a numpy array in a list.
+
+    """
+    # load in a image and retrun as list of numpy arrays
+    return [numpy.asarray(PIL.Image.open(image_name))]
 
 def convert_num_to_bit_string(number, length):
     """

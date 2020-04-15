@@ -12,10 +12,13 @@ import pycrafter6500
 import time
 
 
-image_raw_1 = numpy.asarray(PIL.Image.open("test_image_0.tif")) / 129
-image_raw_2 = numpy.asarray(PIL.Image.open("test_image_2.jpg"))[:,:,1] / 129
+#image_raw_1 = numpy.asarray(PIL.Image.open("test_image_0.tif")) / 129
+#image_raw_2 = numpy.asarray(PIL.Image.open("test_image_2.jpg"))[:,:,1] / 129
 
-images = [image_raw_1, image_raw_2]
+#images = [image_raw_1, image_raw_2]
+
+
+im = pycrafter6500.load_image_sequence("./test_image_x_y/",True)
 
 
 
