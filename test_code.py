@@ -32,7 +32,7 @@ images = load_image_sequence("./test_image_seq_single/",
                              "test_image_sequence",".png", 8, 1)
 """
 images = load_image_sequence("./test_image_x_y/",
-                             "/test_image_x_y",".png", 2, 0)
+                             "/test_image_x_y",".png", 3, 0)
 
 
 
@@ -59,9 +59,9 @@ dlp.change_mode(3)
 exposure_time = 1000000     # in [us]
 repetition_number = 0
 # list length must be always 30 ????
-list_length = 30
+list_length = 24
 exposure = [exposure_time] * list_length
-dark_time = [0] * list_length
+dark_time = [1000000] * list_length
 trigger_in = [False] * list_length
 trigger_out = [1] * list_length
 
