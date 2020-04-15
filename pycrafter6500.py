@@ -630,7 +630,8 @@ class DMD():
         """
         Configure the LUT (Look Up Table) of the controler.
 
-        For the Pattern On-The-Fly mode.
+        For the Pattern On-The-Fly mode. The bit depth of the images has to be
+        inserted here.
 
         Parameters
         ----------
@@ -650,6 +651,7 @@ class DMD():
         string = repeat + '00000' + img
 
         bytes = bits_to_bytes(string)
+        print(bytes)
 
         self.usb_command('w', 0x00, 0x1a, 0x31, bytes)
         self.check_for_errors()
@@ -888,12 +890,12 @@ class DMD():
 
             if i < ((num - 1) / 24):
                 for j in range(i * 24, (i + 1) * 24):
-                    self.define_pattern(j, exposure[j], 1, '111',
+                    self.define_pattern(j, exposure[j], 8, '100',
                                         trigger_in[j], dark_time[j],
                                         trigger_out[j], i, j - i * 24)
             else:
                 for j in range(i * 24, num):
-                    self.define_pattern(j, exposure[j], 1, '111',
+                    self.define_pattern(j, exposure[j], 8, '100',
                                         trigger_in[j], dark_time[j],
                                         trigger_out[j], i, j - i * 24)
 
