@@ -650,7 +650,7 @@ class DMD():
 
         bytes = bits_to_bytes(string)
 
-        self.command('w', 0x00, 0x1a, 0x31, bytes)
+        self.usb_command('w', 0x00, 0x1a, 0x31, bytes)
         self.check_for_errors()
 
     def define_pattern(self, index, exposure, bit_depth, color, trigger_in,
@@ -828,6 +828,7 @@ class DMD():
             self.usb_command('w', 0x11, 0x1a, 0x2b, payload)
 
             self.check_for_errors()
+        
         print(time.clock() - t)  # print time
 
     def define_sequence(self, images, exposure, trigger_in, dark_time,
@@ -886,12 +887,12 @@ class DMD():
 
             if i < ((num - 1) / 24):
                 for j in range(i * 24, (i + 1) * 24):
-                    self.define_pattern(j, exposure[j], 1, '111',
+                    self.define_pattern(j, exposure[j], 1, '100',
                                         trigger_in[j], dark_time[j],
                                         trigger_out[j], i, j - i * 24)
             else:
                 for j in range(i * 24, num):
-                    self.define_pattern(j, exposure[j], 1, '111',
+                    self.define_pattern(j, exposure[j], 1, '100',
                                         trigger_in[j], dark_time[j],
                                         trigger_out[j], i, j - i * 24)
 

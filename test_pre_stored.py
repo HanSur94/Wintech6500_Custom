@@ -1,8 +1,16 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Apr 29 15:53:58 2020
+
+@author: hannessuhr
+"""
+
+
 import pycrafter6500
 import numpy
 import PIL.Image
 
-# load in the image
+
 # divide by 129, to convert 8 bit picture to a binary picture ?
 images = [numpy.asarray(PIL.Image.open("./testimage.tif")) / 129]
 
