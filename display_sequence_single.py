@@ -24,9 +24,10 @@ folder_name = "./test_image_x_y"
 image_format = ".png"
 
 exposure_time = 5000000
+dark_time = 0
 
 exposure = [exposure_time] * 30
-dark_time = [0] * 30
+dark_time = [dark_time] * 30
 trigger_in = [False] * 30
 trigger_out = [1] * 30
 
@@ -75,7 +76,8 @@ for index, image in enumerate(images):
     print("display image")
        
     # wait some time, therefore projector can finish displaying the image
-    time.sleep(exposure_time/1000000 + 1)
+    waiting_time = (exposure_time +  dark_time) / 1000000
+    time.sleep(waiting_time + 1)
     
 dlp.stop_sequence()
 
