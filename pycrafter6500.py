@@ -26,6 +26,7 @@ import time
 import numpy
 import PIL.Image
 import os
+import codecs
 
 
 def load_image_sequence(image_folder_name, print_image_name=False):
@@ -540,7 +541,8 @@ class DMD():
 
         """
         for i in self.ans:
-            print(hex(i))
+            message = str(i) +  "\t" + chr(i) + "\t" + (bin(i))
+            print(message)
 
     def idle_on(self):
         """
@@ -951,12 +953,12 @@ class DMD():
 
             if i < ((num - 1) / 24):
                 for j in range(i * 24, (i + 1) * 24):
-                    self.define_pattern(j, exposure[j], 1, '100',
+                    self.define_pattern(j, exposure[j], 8, '100',
                                         trigger_in[j], dark_time[j],
                                         trigger_out[j], i, j - i * 24)
             else:
                 for j in range(i * 24, num):
-                    self.define_pattern(j, exposure[j], 1, '100',
+                    self.define_pattern(j, exposure[j], 8, '100',
                                         trigger_in[j], dark_time[j],
                                         trigger_out[j], i, j - i * 24)
 
@@ -977,3 +979,167 @@ class DMD():
 
             self.load_bmp(encoded_images[int((num - 1) / 24 - i)],
                           sizes[int((num - 1) / 24 - i)])
+            
+            
+            
+    def show_image_sequence(self, images, brightness, exposures, dark_times, trigger_ins,
+                            trigger_outs):
+        """
+        
+
+        Parameters
+        ----------
+        images : list of list of numpy array
+            A List containing list's each containing a single image 
+            represented by a numpy array.
+        exposure : list of list's each containing 30 entries with the same 
+            value. Couldn't find a explanation for this data structure.
+        dark_time : list of list's each containing 30 entries with the same 
+            value. Couldn't find a explanation for this data structure.
+        trigger_in : TYPE
+            DESCRIPTION.
+        trigger_out : TYPE
+            DESCRIPTION.
+
+        Returns
+        -------
+        None.
+
+        """
+        # minimum wait time in sec to have enough time for a single image to 
+        # be displayed
+        minimum_wait_time = 1
+
+        # stop any already existing sequence
+        self.stop_sequence()
+        
+        # change to pattern on the fly mode
+        self.change_mode(3)
+        
+        for index, image in enumerate(images):
+            print("image Index %d " % index)
+            
+            # stop any already existing sequence
+            self.stop_sequence()
+            
+            #self.dmd_unpark()
+            
+            self.set_led_pwm(brightness[index])
+            
+            #self.long_axis_image_flip()
+            #self.short_axis_image_flip()
+            
+            t = time.clock()
+            # define sequence
+            self.define_sequence(image, exposures[index], trigger_ins[index],
+                                dark_times[index], trigger_outs[index], 1)
+            print("upload time: %f" % t)
+        
+            # start sequence
+            self.start_sequence()
+            print("display image")
+               
+            # wait some time, therefore projector can finish displaying the image
+            waiting_time = (exposures[index][0] +  dark_times[index][0]) / 1000000
+            time.sleep(waiting_time + minimum_wait_time)
+            
+            self.set_led_pwm(0)
+            #self.dmd_park()
+            
+        self.stop_sequence()
+        self.set_led_pwm(0)
+        
+    def get_minimum_led_pattern_exposure(self):
+         self.usb_command('r', 0xff, 0x1A, 0x42, [])
+         self.read_reply()
+
+
+    def read_control_command(self):
+        self.usb_command('r', 0xff, 0x00, 0x15, [])
+        self.read_reply()
+        
+    def read_status(self):
+        self.usb_command('r', 0xff, 0x00, 0x00, [])
+        self.read_reply()
+        
+    def read_firmware(self):
+        self.usb_command('r', 0xff, 0x02, 0x06, [])
+        self.read_reply()
+        
+    def set_led_pwm(self, current_pwm, enable_disable='enable',
+                    pwm_polarity='normal'):
+        """
+        
+
+        Parameters
+        ----------
+        current_pwm : int
+            Is the PWM current value of the blue LED. This will affect the 
+            duty cycle of the pwm modulated current through the blue LED.
+            PWM value is in 8Bit 0...255 .
+        enable_disable : str, optional
+            Enables or disables the blue LED. To enable the blue led set to
+            'enable'. To disbale set to 'disable'. The default is 'enable'.
+        pwm_polarity : str, optional
+            DESCRIPTION. The default is 'normal'.
+
+        Returns
+        -------
+        None.
+
+        """
+        
+        
+        """
+        LED driver operation is a function of the individual red, green, and blue LED-enable software-control
+        parameters. The recommended order for initializing LED drivers is to:
+        1. Program the individual red, green, and blue LED driver currents.
+        2. Program the LED PWM polarity.
+        3. Enable the individual LED enable outputs.
+        """
+        self.set_led_driver_current(current_pwm)
+        self.set_led_pwm_polarity(pwm_polarity)
+        self.enable_disable_blue_led(enable_disable)
+    
+    def enable_disable_blue_led(self, enable_disable):
+        if enable_disable == 'enable':
+            payload = 0b00000100
+        elif enable_disable == 'disable':
+            payload = 0b00000000
+        else:
+            print('No valid input. Choose either "enable" or "disable".')
+            
+        self.usb_command('w', 0xff, 0x1A, 0x07, [payload])
+        #self.read_reply()
+        
+    def set_led_pwm_polarity(self, pwm_polarity):
+        if pwm_polarity == 'normal':
+            payload = 0b00
+        elif pwm_polarity == 'invert':
+            payload = 0b00
+        else:
+            print('No valid input. Choose either "normal" or "invert".')
+            
+        self.usb_command('w', 0xff, 0x1A, 0x05, [payload])
+        #self.read_reply()
+        
+    def set_led_driver_current(self, current_pwm):
+        self.usb_command('w', 0xff, 0x0B, 0x01, [0x00,0x00,current_pwm])
+        #self.read_reply()
+        
+    def long_axis_image_flip(self):
+        payload = 0b00000001
+        self.usb_command('w', 0xff, 0x10, 0x08, [payload])
+        
+    def short_axis_image_flip(self):
+        payload = 0b00000001
+        self.usb_command('w', 0xff, 0x10, 0x09, [payload])
+        
+    def dmd_park(self):
+        self.stop_sequence()
+        payload = 0b00000001
+        self.usb_command('w', 0xff, 0x06, 0x09, [payload])
+        
+    def dmd_unpark(self):
+        payload = 0b00000000
+        self.usb_command('w', 0xff, 0x06, 0x09, [payload])
