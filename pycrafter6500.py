@@ -413,15 +413,18 @@ class DMD():
         Upload .bmp image to controler.
     define_sequence()
         Define a image sequence to display.
-
-    Planned Methods
-    ---------------
+        
+        
     long_axis_image_flip()
     short_axis_image_flip()
     dmd_park()
     dmd_unpark()
     pwm_setup()
     blue_led_control()
+
+    Planned Methods
+    ---------------
+    
     get_hardware_status()
     get_system_status()
     get_main_status()
@@ -982,10 +985,11 @@ class DMD():
             
             
             
-    def show_image_sequence(self, images, brightness, exposures, dark_times, trigger_ins,
-                            trigger_outs):
+    def show_image_sequence(self, images, brightness, exposures, dark_times,
+                            trigger_ins,  trigger_outs):
         """
-        
+        Defines and start's a sequence of always a single image from a list of
+        images.
 
         Parameters
         ----------
@@ -993,6 +997,8 @@ class DMD():
             A List containing list's each containing a single image 
             represented by a numpy array.
         brightness : list int
+            A List containing the brightness value as the blue LED PWM current,
+            for each picture. Must have the same length like images.
         exposure : list of list's of int
             A List of list's of each containing 30 entries with the same 
             value. Couldn't find a explanation for this data structure.
@@ -1092,7 +1098,8 @@ class DMD():
         """
         Enables or Disables the blue LED and sets PWM value and PWM polarity.
         
-        LED driver operation is a function of the individual red, green, and blue LED-enable software-control
+        LED driver operation is a function of the individual red, green, and
+        blue LED-enable software-control
         parameters. The recommended order for initializing LED drivers is to:
         1. Program the individual red, green, and blue LED driver currents.
         2. Program the LED PWM polarity.
