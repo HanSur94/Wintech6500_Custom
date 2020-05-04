@@ -989,17 +989,22 @@ class DMD():
 
         Parameters
         ----------
-        images : list of list of numpy array
+        images : list list numpy array
             A List containing list's each containing a single image 
             represented by a numpy array.
-        exposure : list of list's each containing 30 entries with the same 
+        brightness : list int
+        exposure : list of list's of int
+            A List of list's of each containing 30 entries with the same 
             value. Couldn't find a explanation for this data structure.
-        dark_time : list of list's each containing 30 entries with the same 
+        dark_time : list list int
+            List of list's each containing 30 entries with the same 
             value. Couldn't find a explanation for this data structure.
-        trigger_in : TYPE
-            DESCRIPTION.
-        trigger_out : TYPE
-            DESCRIPTION.
+        trigger_in : list list bool
+            List of list's each containing if a trigger in signal is 
+            used or not represented as an boolean.
+        trigger_out : list of list's of bool
+            List of list's each containing if a trigger out signal is 
+            used or not represented as an boolean.
 
         Returns
         -------
@@ -1059,17 +1064,39 @@ class DMD():
         self.read_reply()
         
     def read_status(self):
+        """
+        Prints the current status in teh console......??????
+
+        Returns
+        -------
+        None.
+
+        """
         self.usb_command('r', 0xff, 0x00, 0x00, [])
         self.read_reply()
         
     def read_firmware(self):
+        """
+        Prints the current firmware in the console.
+
+        Returns
+        -------
+        None.
+
+        """
         self.usb_command('r', 0xff, 0x02, 0x06, [])
         self.read_reply()
         
     def set_led_pwm(self, current_pwm, enable_disable='enable',
                     pwm_polarity='normal'):
         """
+        Enables or Disables the blue LED and sets PWM value and PWM polarity.
         
+        LED driver operation is a function of the individual red, green, and blue LED-enable software-control
+        parameters. The recommended order for initializing LED drivers is to:
+        1. Program the individual red, green, and blue LED driver currents.
+        2. Program the LED PWM polarity.
+        3. Enable the individual LED enable outputs.
 
         Parameters
         ----------
@@ -1081,27 +1108,33 @@ class DMD():
             Enables or disables the blue LED. To enable the blue led set to
             'enable'. To disbale set to 'disable'. The default is 'enable'.
         pwm_polarity : str, optional
-            DESCRIPTION. The default is 'normal'.
+            Is the PWM polarity of blue LED. If set to 'normal', then the
+            lowest PWM current value is 0 and the highest is 255. If set to 
+            'inverse', then the lowest PWM value is 255 and the highest is 0.
+            The default is 'normal'.
 
         Returns
         -------
         None.
-
-        """
-        
-        
-        """
-        LED driver operation is a function of the individual red, green, and blue LED-enable software-control
-        parameters. The recommended order for initializing LED drivers is to:
-        1. Program the individual red, green, and blue LED driver currents.
-        2. Program the LED PWM polarity.
-        3. Enable the individual LED enable outputs.
         """
         self.set_led_driver_current(current_pwm)
         self.set_led_pwm_polarity(pwm_polarity)
         self.enable_disable_blue_led(enable_disable)
     
     def enable_disable_blue_led(self, enable_disable):
+        """
+        Enables or disables the blue LED.
+        
+        Parameters
+        ----------
+        enable_disable : str, optional
+            Enables or disables the blue LED. To enable the blue led set to
+            'enable'. To disbale set to 'disable'. The default is 'enable'.
+            
+        Returns
+        -------
+        None.
+        """
         if enable_disable == 'enable':
             payload = 0b00000100
         elif enable_disable == 'disable':
@@ -1110,9 +1143,23 @@ class DMD():
             print('No valid input. Choose either "enable" or "disable".')
             
         self.usb_command('w', 0xff, 0x1A, 0x07, [payload])
-        #self.read_reply()
         
     def set_led_pwm_polarity(self, pwm_polarity):
+        """
+        Set's the PWM polarity mode.
+
+        Parameters
+        ----------
+        pwm_polarity : str, optional
+            Is the PWM polarity of blue LED. If set to 'normal', then the
+            lowest PWM current value is 0 and the highest is 255. If set to 
+            'inverse', then the lowest PWM value is 255 and the highest is 0.
+            The default is 'normal'.
+
+        Returns
+        -------
+        None.
+        """
         if pwm_polarity == 'normal':
             payload = 0b00
         elif pwm_polarity == 'invert':
@@ -1121,25 +1168,75 @@ class DMD():
             print('No valid input. Choose either "normal" or "invert".')
             
         self.usb_command('w', 0xff, 0x1A, 0x05, [payload])
-        #self.read_reply()
         
     def set_led_driver_current(self, current_pwm):
-        self.usb_command('w', 0xff, 0x0B, 0x01, [0x00,0x00,current_pwm])
-        #self.read_reply()
+        """
+        Set's the blue LED PWM current.
+
+        Parameters
+        ----------
+        current_pwm : int
+            Is the PWM current value of the blue LED. This will affect the 
+            duty cycle of the pwm modulated current through the blue LED.
+            PWM value is in 8Bit 0...255 .
+
+        Returns
+        -------
+        None.
+
+        """
+        # in the following order: red, green, blue
+        payload =  [0x00, 0x00, current_pwm]
+        self.usb_command('w', 0xff, 0x0B, 0x01, payload)
         
     def long_axis_image_flip(self):
+        """
+        Flips an image alongs it's long axis. Call this method before an
+        image is shown with the define_sequence method.
+
+        Returns
+        -------
+        None.
+        """
         payload = 0b00000001
         self.usb_command('w', 0xff, 0x10, 0x08, [payload])
         
     def short_axis_image_flip(self):
+        """
+        Flips an image alongs it's short axis. Call this method before an
+        image is shown with the define_sequence method.
+
+        Returns
+        -------
+        None.
+        """
         payload = 0b00000001
         self.usb_command('w', 0xff, 0x10, 0x09, [payload])
         
     def dmd_park(self):
+        """
+        Put's the DMD mirrors in a parking position, therefore not so much
+        light can enter the optics. Therefore no image is displayed. Always
+        make sure, before sending the DMD park command, that no sequence is
+        running. Also when removing power from the projector, please go into
+        standby mode!
+
+        Returns
+        -------
+        None.
+        """
         self.stop_sequence()
         payload = 0b00000001
         self.usb_command('w', 0xff, 0x06, 0x09, [payload])
         
     def dmd_unpark(self):
+        """
+        Unparks the DMD mirrors.
+
+        Returns
+        -------
+        None.
+
+        """
         payload = 0b00000000
         self.usb_command('w', 0xff, 0x06, 0x09, [payload])
