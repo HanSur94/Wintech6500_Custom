@@ -26,7 +26,9 @@ import time
 import numpy
 import PIL.Image
 import os
-import codecs
+import tkinter as tk
+from tkinter import filedialog
+import threading
 
 
 def load_image_sequence(image_folder_name, print_image_name=False):
@@ -1247,3 +1249,145 @@ class DMD():
         """
         payload = 0b00000000
         self.usb_command('w', 0xff, 0x06, 0x09, [payload])
+        
+        
+class PycrafterGUI():
+    
+    def __init__(self):
+        
+        # gui data
+        self.image_file_name_list = []
+        self.sequence_param_file_name = "empty"
+        self.images = []
+        self.parameters = []
+        self.image_names = []
+        self.image_index = []
+        self.image_brightness = []
+        self.image_exposure = []
+        self.image_dark_time = []
+        self.image_trigger_in = []
+        self.image_trigger_out = []
+        
+        # tk settings
+        self.windowDimension = "200x200"
+        self.Gui = tk.Tk()
+        self.Gui.title("PycrafterGUI")
+        self.Gui.geometry(self.windowDimension)
+        
+         # Activate the gui loop
+        self.create_widgets()
+        self.Gui.mainloop()
+        
+    def create_widgets(self):
+        self.select_sequence_folder_button = tk.Button(master=self.Gui,
+                                                       text="Select Image Folder",
+                        command=self.select_sequence_folder,
+                        background="blue")
+        self.select_sequence_folder_button.grid(column=1, row=1)
+        
+    def select_sequence_folder(self):
+        self.sequence_folder_name = filedialog.askdirectory(initialdir = "./", 
+                                          title = "Select Image Dir")
+        print(self.sequence_folder_name)
+        self.load_image_sequence_data()
+        
+    def load_image_sequence_data(self):
+        
+        self.image_file_name_list = []
+        self.sequence_param_file_name = "empty"
+        
+        # load in images and sequence data
+        # image sequence data is in file "sequence_param.txt"
+        
+        for file_name in os.listdir(self.sequence_folder_name):
+
+            full_file_name = os.path.join(
+                self.sequence_folder_name, file_name)
+            
+            name, ext = os.path.splitext(file_name)
+            
+            if ext == '.txt':
+                self.sequence_param_file_name = full_file_name
+            if ext == '.png' or ext == '.jpg' or ext == '.tif':
+                self.image_file_name_list.append(full_file_name)
+        
+        
+        for file_name in self.image_file_name_list:
+            print(file_name)
+            
+        print("\n" + self.sequence_param_file_name)
+        
+        self.load_images()
+        self.load_image_sequence_setting()
+        
+        
+    def load_image_sequence_setting(self):
+        self.parameters = []
+        self.image_names = []
+        self.image_index = []
+        self.image_brightness = []
+        self.image_exposure = []
+        self.image_dark_time = []
+        self.image_trigger_in = []
+        self.image_trigger_out = []
+        
+        # open file with settings and put them in a list
+        file = open(self.sequence_param_file_name,'r')
+        lines = file.readlines()
+        file.close()
+        
+        for text in lines:
+            self.parameters.append(text.split(';'))
+            
+        for parameter in self.parameters:
+            
+            self.image_names.append(str(parameter[0]))
+            self.image_index.append(int(parameter[1]))
+            self.image_brightness.append(int(parameter[2]))
+            self.image_exposure.append(int(parameter[3]))
+            self.image_dark_time.append(int(parameter[4]))
+            
+            if 'True' in parameter[5] or 'true' in parameter[5] or '1' in parameter[5]:
+                self.image_trigger_in.append(True)
+            elif 'False' in parameter[5] or 'false' in parameter[5] or '0' in parameter[5]:
+                self.image_trigger_in.append(False)
+                
+            if 'True' in parameter[6] or 'true' in parameter[6] or '1' in parameter[6]:
+                self.image_trigger_out.append(True)
+            elif 'False' in parameter[6] or 'false' in parameter[6] or '0' in parameter[6]:
+                self.image_trigger_out.append(False)
+
+        print('\n')
+        print(self.parameters)
+        print('\n')
+        print(self.image_names)
+        print('\n')
+        print(self.image_index)
+        print('\n')
+        print(self.image_brightness)
+        print('\n')
+        print(self.image_exposure)
+        print('\n')
+        print(self.image_dark_time)
+        print('\n')
+        print(self.image_trigger_in)
+        print('\n')
+        print(self.image_trigger_out)
+        print('\n')
+        
+        
+        
+        # have to cut each string!!!
+        
+        
+    def load_images(self):
+        self.images = []
+        # load in images as list of list of numpy arrays
+        for image_file_name in self.image_file_name_list:
+            
+            print("fetching image %s " % image_file_name)
+            image = [numpy.asarray(PIL.Image.open(image_file_name))]
+            self.images.append(image)
+            print(self.images)
+    
+GUI = PycrafterGUI()
