@@ -988,7 +988,7 @@ class DMD():
             
             
     def show_image_sequence(self, images, brightness, exposures, dark_times,
-                            trigger_ins,  trigger_outs):
+                            trigger_ins,  trigger_outs, debug=False):
         """
         Defines and start's a sequence of always a single image from a list of
         images.
@@ -1029,43 +1029,63 @@ class DMD():
         # change to pattern on the fly mode
         self.change_mode(3)
         
+        upload_time = 0
+        
         for index, image in enumerate(images):
-            print("image Index %d " % index)
+            
+            if debug:
+                print("image Index %d " % index)
+                print('\n current image settings:')
+                print('\n brightness: %d' % brightness[index])
+                print('\n exposure: %d' % exposures[index][0] )
+                print('\n dark time: %d' % dark_times[index][0])
+                print('\n trigger in: %s' %  trigger_ins[index][0])
+                print('\n trigger out: %s' % trigger_outs[index][0])
+            
             
             # stop any already existing sequence
             self.stop_sequence()
             
-            #self.dmd_unpark()
+            self.dmd_unpark()
             
             self.set_led_pwm(brightness[index])
             
             #self.long_axis_image_flip()
             #self.short_axis_image_flip()
             
-            t = time.clock()
+            upload_time = time.process_time() - upload_time
             # define sequence
             self.define_sequence(image, exposures[index], trigger_ins[index],
                                 dark_times[index], trigger_outs[index], 1)
-            print("upload time: %f" % t)
+            
+            if debug:
+                print("upload time: %f" % upload_time)
         
             # start sequence
             self.start_sequence()
-            print("display image")
+            
+            if debug:
+                print("display image")
+                
                
             # wait some time, therefore projector can finish displaying the image
-            waiting_time = (exposures[index][0] +  dark_times[index][0]) / 1000000
+            waiting_time = (exposures[index][0] + dark_times[index][0]) / 1000000
             time.sleep(waiting_time + minimum_wait_time)
             
+            if debug:
+                print('\nwaited time: %f' % (waiting_time + minimum_wait_time))
+            
+            print('\n')
             self.set_led_pwm(0)
-            #self.dmd_park()
+            self.dmd_park()
             
         self.stop_sequence()
+        self.dmd_park()
         self.set_led_pwm(0)
         
     def get_minimum_led_pattern_exposure(self):
          self.usb_command('r', 0xff, 0x1A, 0x42, [])
          self.read_reply()
-
 
     def read_control_command(self):
         self.usb_command('r', 0xff, 0x00, 0x15, [])
@@ -1250,10 +1270,50 @@ class DMD():
         payload = 0b00000000
         self.usb_command('w', 0xff, 0x06, 0x09, [payload])
         
+    def set_gpio_channels_pwm(self):
+        """
+        DLPC900 provides four general-purpose PWM channels that can be used
+        for a variety of control applications, such as fan speed. If the PWM
+        functionality is not needed, these signals can be programmed as
+        GPIO pins. To enable the PWM signals:
+        1. Program the PWM signal using the PWM Setup command.
+        2. Enable the PWM signal with the PWM Enable command.
+
+        Returns
+        -------
+        None.
+
+        """
+        # TODO
+        self.usb_command('r', 0xff, 0x1A, 0x11, [])
+        self.read_reply()
+        
+    def get_hardware_status(self):
+        self.usb_command('r', 0xff, 0x1A, 0x0A, [])
+        self.read_reply()
+    
+    def get_system_status(self):
+        self.usb_command('r', 0xff, 0x1A, 0x0B, [])
+        self.read_reply()
+    
+    def get_main_status(self):
+        self.usb_command('r', 0xff, 0x1A, 0x0C, [])
+        self.read_reply()
+        
+    
         
 class PycrafterGUI():
     
     def __init__(self):
+        
+        try:
+            # create a DMD class object
+            self.dlp = DMD()
+            # send wakeup to controller
+            self.dlp.wake_up()
+            time.sleep(1)
+        except:
+            print('No usb connection to projector at start up.')
         
         # gui data
         self.image_file_name_list = []
@@ -1267,6 +1327,8 @@ class PycrafterGUI():
         self.image_dark_time = []
         self.image_trigger_in = []
         self.image_trigger_out = []
+        self.is_data_loaded = False
+        self.is_idle = False
         
         # tk settings
         self.windowDimension = "200x200"
@@ -1275,53 +1337,109 @@ class PycrafterGUI():
         self.Gui.geometry(self.windowDimension)
         
          # Activate the gui loop
+        self.Gui.update_idletasks()
         self.create_widgets()
+        self.gui_logic()
+        #self.gui_logic_thread = threading.Thread(target=self.gui_logic, args=())
         self.Gui.mainloop()
         
     def create_widgets(self):
+        
+        # button for selecting image folder
         self.select_sequence_folder_button = tk.Button(master=self.Gui,
                                                        text="Select Image Folder",
                         command=self.select_sequence_folder,
                         background="blue")
         self.select_sequence_folder_button.grid(column=1, row=1)
         
-    def select_sequence_folder(self):
-        self.sequence_folder_name = filedialog.askdirectory(initialdir = "./", 
-                                          title = "Select Image Dir")
-        print(self.sequence_folder_name)
-        self.load_image_sequence_data()
+        # button for starting a sequence
+        self.start_image_sequence_button = tk.Button(master=self.Gui,
+                                                       text="Start Image Sequence",
+                        command=self.start_image_sequence,
+                        background="red")
+        self.start_image_sequence_button.grid(column=1, row=2)
         
-    def load_image_sequence_data(self):
+        # button for enable disable idle mode of the projector
+        self.activate_standby_button = tk.Button(master=self.Gui,
+                                                       text="Activate Standby",
+                        command=self.activate_standby,
+                        background="green")
+        self.activate_standby_button.grid(column=1, row=3)
+        
+    def gui_logic(self):
+        # controlls the state of the gui
+        if self.is_data_loaded == False or self.is_idle == True :
+            self.start_image_sequence_button.config(state='disabled', background='red')
+        else:
+            self.start_image_sequence_button.config(state='normal', background='green')
+            
+        if self.is_idle == False:
+            self.activate_standby_button.config(background='green', text="Activate Standby")
+        else:
+            self.activate_standby_button.config(background='red', text="Wake Up")
+        
+        self.Gui.after(10, self.gui_logic)
+        
+    def activate_standby(self):
+         if self.is_idle == False:
+             self.dlp.dmd_park()
+             self.dlp.stand_by()
+             self.is_idle = True
+         else:
+             self.dlp.wake_up()
+             self.dlp.dmd_unpark()
+             self.is_idle = False
+        
+        
+    def select_sequence_folder(self, debug=False):
+        # open dialog window to select folder with images and sequence
+        # parameter file
+        self.sequence_folder_name = filedialog.askdirectory(initialdir = "./", 
+                                          title = "Select Image Folder")
+        if debug:
+            print(self.sequence_folder_name)
+            
+        self.load_image_sequence_data(True)
+        
+    def load_image_sequence_data(self, debug=False):
         
         self.image_file_name_list = []
         self.sequence_param_file_name = "empty"
         
         # load in images and sequence data
         # image sequence data is in file "sequence_param.txt"
-        
         for file_name in os.listdir(self.sequence_folder_name):
-
+            
+            # join full file path and file name
             full_file_name = os.path.join(
                 self.sequence_folder_name, file_name)
             
+            # get the file name and file extension
             name, ext = os.path.splitext(file_name)
             
+            # only save parameter file, if it has the following extensions
             if ext == '.txt':
                 self.sequence_param_file_name = full_file_name
+            # only save if the image files have the following file extensions
             if ext == '.png' or ext == '.jpg' or ext == '.tif':
                 self.image_file_name_list.append(full_file_name)
         
+        if debug:
+            for file_name in self.image_file_name_list:
+                print(file_name)
+          
+            print("\n" + self.sequence_param_file_name)
         
-        for file_name in self.image_file_name_list:
-            print(file_name)
-            
-        print("\n" + self.sequence_param_file_name)
+        # load and save images as numpy arrays
+        self.load_images(True)
         
-        self.load_images()
-        self.load_image_sequence_setting()
+        # load and save the image parameters
+        self.load_image_sequence_setting(True)
         
         
-    def load_image_sequence_setting(self):
+    def load_image_sequence_setting(self, debug=False):
+        
+        # clear all lists before appending to them
         self.parameters = []
         self.image_names = []
         self.image_index = []
@@ -1333,61 +1451,112 @@ class PycrafterGUI():
         
         # open file with settings and put them in a list
         file = open(self.sequence_param_file_name,'r')
+        # read the file and save individual lines as a list with strings
         lines = file.readlines()
         file.close()
         
+        # split each string in a list by ';' and save splitted strings in 
+        # current list
         for text in lines:
             self.parameters.append(text.split(';'))
             
-        for parameter in self.parameters:
+        # remove the header line
+        self.parameters.remove(self.parameters[0])
             
+        # iterate through each lsit and save all different parameters of each 
+        # picture in a seperate list
+        for parameter in self.parameters:
             self.image_names.append(str(parameter[0]))
             self.image_index.append(int(parameter[1]))
             self.image_brightness.append(int(parameter[2]))
             self.image_exposure.append(int(parameter[3]))
             self.image_dark_time.append(int(parameter[4]))
             
+            # parse for the trigger_in and the trigger_out variables
             if 'True' in parameter[5] or 'true' in parameter[5] or '1' in parameter[5]:
                 self.image_trigger_in.append(True)
             elif 'False' in parameter[5] or 'false' in parameter[5] or '0' in parameter[5]:
                 self.image_trigger_in.append(False)
-                
+            
             if 'True' in parameter[6] or 'true' in parameter[6] or '1' in parameter[6]:
                 self.image_trigger_out.append(True)
             elif 'False' in parameter[6] or 'false' in parameter[6] or '0' in parameter[6]:
                 self.image_trigger_out.append(False)
 
-        print('\n')
-        print(self.parameters)
-        print('\n')
-        print(self.image_names)
-        print('\n')
-        print(self.image_index)
-        print('\n')
-        print(self.image_brightness)
-        print('\n')
-        print(self.image_exposure)
-        print('\n')
-        print(self.image_dark_time)
-        print('\n')
-        print(self.image_trigger_in)
-        print('\n')
-        print(self.image_trigger_out)
-        print('\n')
+        if debug:
+            print('\n')
+            print('Input from %s' % self.sequence_param_file_name)
+            print('\n All Parameters:\t')
+            print(self.parameters)
+            print('\n Image Names:\t')
+            print(self.image_names)
+            print('\n Image Index:\t')
+            print(self.image_index)
+            print('\n Image Brightness:\t')
+            print(self.image_brightness)
+            print('\n Image Exposure:\t')
+            print(self.image_exposure)
+            print('\n Dark Time:\t')
+            print(self.image_dark_time)
+            print('\n Image Trigger In:\t')
+            print(self.image_trigger_in)
+            print('\n Image Trigger Out:\t')
+            print(self.image_trigger_out)
+            print('\n')
+            
+            
+        # check that the length of the parameters is te same like the image
+        # list
+        if (len(self.image_names) == len(self.images) and 
+            len(self.image_index) == len(self.images) and  
+             len(self.image_brightness) == len(self.images) and  
+              len(self.image_exposure) == len(self.images) and  
+               len(self.image_dark_time) == len(self.images) and  
+                len(self.image_trigger_out) == len(self.images) and 
+                 len(self.image_trigger_in) == len(self.images)):
+                     self.is_data_loaded = True
+        else:
+            raise Exception('Sequence parameter length is not equal the' + 
+                            ' number of loaded images. Please check length of your' + 
+                            ' image parameters and your number of images.' + 
+                            (' Number of images is %d.' %(len(self.images)) ))
+            self.is_data_loaded = False
+
         
-        
-        
-        # have to cut each string!!!
-        
-        
-    def load_images(self):
+    def load_images(self, debug=False):
         self.images = []
         # load in images as list of list of numpy arrays
         for image_file_name in self.image_file_name_list:
             
-            print("fetching image %s " % image_file_name)
+            if debug:
+                print("fetching image %s " % image_file_name)
+                
             image = [numpy.asarray(PIL.Image.open(image_file_name))]
             self.images.append(image)
-            print(self.images)
-    
-GUI = PycrafterGUI()
+            
+            if debug:
+                print(self.images)
+                
+    def start_image_sequence(self, debug=False):
+        
+        # init list's where the parameter list's will be saved in
+        exposures = []
+        dark_times = []
+        trigger_ins = []
+        trigger_outs = []
+        
+        print(len(self.images))
+        
+        # create new list's in order to start the sequence
+        for index, image in  enumerate(self.images):
+            
+            print(index)
+            
+            exposures.append( [self.image_exposure[index]] * 30 )
+            dark_times.append( [self.image_dark_time[index]] * 30 )
+            trigger_ins.append( [self.image_trigger_in[index]] * 30 )
+            trigger_outs.append( [self.image_trigger_out[index]] * 30 )
+
+        self.dlp.show_image_sequence(self.images, self.image_brightness, 
+                                     exposures,  dark_times, trigger_ins,
+                                     trigger_outs, True)  

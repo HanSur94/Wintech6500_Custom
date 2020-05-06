@@ -26,7 +26,7 @@ image_format = ".png"
 exposure_time = 1000000
 dark_time = 0
 
-brightness = [255,255,255]
+brightness = [255,255,255,255]
 exposure = [exposure_time] * 30
 dark_time = [dark_time] * 30
 trigger_in = [False] * 30
@@ -54,8 +54,8 @@ for image in images:
 # create a DMD class object
 dlp = pycrafter6500.DMD()
 
-dlp.show_image_sequence(images, brightness, exposures, dark_times, trigger_ins,
-                        trigger_outs)    
+dlp.show_image_sequence(images, brightness, exposures, dark_times, trigger_ins, 
+                        trigger_outs, True)    
     
     
 """
