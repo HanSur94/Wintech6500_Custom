@@ -20,6 +20,48 @@ import time
     # start exposure time
     # stop after exposure time
 
+
+
+image1 = pycrafter6500.load_image('./test_image_0.tif')
+image = image1
+image2 = pycrafter6500.load_image('./test_image_0.tif')
+images = [image1, image2]
+#images = pycrafter6500.load_image_sequence('./test_image_x_y_2/',True)
+exposure_time = 1000000
+dark_time = 0
+
+brightness = [255]
+exposure = [exposure_time] * 30
+dark_time = [dark_time] * 30
+trigger_in = [False] * 30
+trigger_out = [1] * 30
+
+# create a DMD class object
+dlp = pycrafter6500.DMD()
+
+dlp.stop_sequence()
+
+dlp.change_mode(3)
+"""
+dlp.encoding_merging_image(image)
+
+dlp.upload_image(image, exposure, trigger_in,
+                        dark_time, trigger_out, 1)
+"""
+
+
+dlp.encoding_merging_image_sequence(images)
+
+dlp.upload_image_sequence(images, exposure, trigger_in,
+                        dark_time, trigger_out, 1)
+
+#dlp.define_sequence(image, exposure, trigger_in,
+#                        dark_time, trigger_out, 1)
+dlp.start_sequence()
+
+
+
+"""
 folder_name = "./test_image_x_y"
 image_format = ".png"
 
@@ -57,7 +99,7 @@ dlp = pycrafter6500.DMD()
 dlp.show_image_sequence(images, brightness, exposures, dark_times, trigger_ins, 
                         trigger_outs, True)    
     
-    
+    """
 """
 # create a DMD class object
 dlp = pycrafter6500.DMD()

@@ -189,6 +189,8 @@ def encode(image):
         Is the number of bytes from the bit string.
 
     """
+    upload_time = time.process_time()
+    
     # header creation
     byte_count = 48
     bit_string = []
@@ -362,6 +364,10 @@ def encode(image):
     total = bits_to_bytes(total)
     for i in range(len(total)):
         bit_string[i + 8] = total[i]
+        
+        
+    upload_time = time.process_time() - upload_time
+    print('encoding time [s]: %f' % upload_time)
 
     return bit_string, byte_count
 
@@ -447,6 +453,10 @@ class DMD():
         self.dev.set_configuration()
         self.ans = []
         self.encoded_image = []
+        self.encoded_images_list = []
+        self.sizes = []
+        self.size_list = []
+        self.num = 0
 
     def usb_command(self, mode, byte_sequence, com1, com2, data=None):
         """
@@ -900,6 +910,83 @@ class DMD():
             self.check_for_errors()
         
         print(time.clock() - t)  # print time
+        
+        
+        
+    def encoding_merging_image(self, image):
+        self.stop_sequence()
+
+        arr = []
+
+        for i in image:
+            arr.append(i)  
+            #arr.append(numpy.ones((1080,1920),dtype='uint8'))
+
+        self.num = len(arr)
+
+        self.encoded_images = []
+        self.sizes = []
+
+        for i in range(int((self.num - 1) / 24 + 1)):
+            print('merging...')
+
+            if i < ((self.num - 1) / 24):
+                image_data = merge_images(arr[i * 24:(i + 1) * 24])
+            else:
+                image_data = merge_images(arr[i * 24:])
+
+            print('encoding...')
+            image_data, self.size = encode(image_data)
+
+            self.encoded_images.append(image_data)
+            self.sizes.append(self.size)
+        
+        return self.encoded_images, self.sizes
+        
+    def encoding_merging_image_sequence(self, images):
+        
+        self.encoded_images_list = []
+        self.size_list = []
+        for image in images:
+            encoded_image, size =  self.encoding_merging_image(image)
+            self.encoded_images_list.append(encoded_image)
+            self.size_list.append(size)
+            
+    def upload_image(self, encoded_images, sizes, exposure, trigger_in, dark_time,
+                                trigger_out, repetition_number):
+        
+        for i in range(int((self.num - 1) / 24 + 1)):
+            if i < ((self.num - 1) / 24):
+                    for j in range(i * 24, (i + 1) * 24):
+                        self.define_pattern(j, exposure[j], 8, '100',
+                                            trigger_in[j], dark_time[j],
+                                            trigger_out[j], i, j - i * 24)
+            else:
+                for j in range(i * 24, self.num):
+                    self.define_pattern(j, exposure[j], 8, '100',
+                                        trigger_in[j], dark_time[j],
+                                        trigger_out[j], i, j - i * 24)
+
+        self.configure_lut(self.num, repetition_number)
+        
+        for i in range(int((self.num - 1) / 24 + 1)):
+           
+           self.set_bmp(int((self.num - 1) / 24 - i),
+                        self.sizes[int((self.num - 1) / 24 - i)])
+
+           print('uploading...')
+
+           """
+           Seems like that the size index is too big. This results
+           in a error in the bmpload() function.
+           A if statement in the bmpload() function was implemented.
+           This if statement blocks index, that is too long!
+           """
+
+           self.load_bmp(encoded_images[int((self.num - 1) / 24 - i)],
+                         sizes[int((self.num - 1) / 24 - i)])
+        
+        
 
     def define_sequence(self, images, exposure, trigger_in, dark_time,
                         trigger_out, repetition_number):
@@ -970,6 +1057,7 @@ class DMD():
         self.configure_lut(num, repetition_number)
 
         for i in range(int((num - 1) / 24 + 1)):
+            
             self.set_bmp(int((num - 1) / 24 - i),
                          sizes[int((num - 1) / 24 - i)])
 
@@ -1021,15 +1109,17 @@ class DMD():
         """
         # minimum wait time in sec to have enough time for a single image to 
         # be displayed
-        minimum_wait_time = 1
-
+        minimum_wait_time = 0.01
         # stop any already existing sequence
         self.stop_sequence()
-        
+        self.set_led_pwm(0)
+        self.idle_off()
         # change to pattern on the fly mode
         self.change_mode(3)
         
         upload_time = 0
+        
+        self.encoding_merging_image_sequence(images)
         
         for index, image in enumerate(images):
             
@@ -1037,52 +1127,43 @@ class DMD():
                 print("image Index %d " % index)
                 print('\n current image settings:')
                 print('\n brightness: %d' % brightness[index])
-                print('\n exposure: %d' % exposures[index][0] )
-                print('\n dark time: %d' % dark_times[index][0])
+                print('\n exposure [us]: %d' % exposures[index][0] )
+                print('\n dark time [us]: %d' % dark_times[index][0])
                 print('\n trigger in: %s' %  trigger_ins[index][0])
                 print('\n trigger out: %s' % trigger_outs[index][0])
             
-            
-            # stop any already existing sequence
-            self.stop_sequence()
-            
-            self.dmd_unpark()
-            
-            self.set_led_pwm(brightness[index])
-            
-            #self.long_axis_image_flip()
-            #self.short_axis_image_flip()
-            
             upload_time = time.process_time() - upload_time
-            # define sequence
-            self.define_sequence(image, exposures[index], trigger_ins[index],
+            
+            self.upload_image(self.encoded_images_list[index], 
+                              self.size_list[index], exposures[index],
+                              trigger_ins[index],
                                 dark_times[index], trigger_outs[index], 1)
             
             if debug:
-                print("upload time: %f" % upload_time)
+                print("upload time [s]: %f" % upload_time)
         
             # start sequence
+            self.set_led_pwm(brightness[index])
             self.start_sequence()
             
             if debug:
                 print("display image")
                 
-               
             # wait some time, therefore projector can finish displaying the image
             waiting_time = (exposures[index][0] + dark_times[index][0]) / 1000000
             time.sleep(waiting_time + minimum_wait_time)
             
             if debug:
-                print('\nwaited time: %f' % (waiting_time + minimum_wait_time))
+                print('\nwaited time [s]: %f' % (waiting_time + minimum_wait_time))
             
             print('\n')
             self.set_led_pwm(0)
-            self.dmd_park()
+            self.stop_sequence()
             
         self.stop_sequence()
-        self.dmd_park()
         self.set_led_pwm(0)
-        
+        self.idle_on()
+
     def get_minimum_led_pattern_exposure(self):
          self.usb_command('r', 0xff, 0x1A, 0x42, [])
          self.read_reply()
@@ -1305,13 +1386,15 @@ class DMD():
 class PycrafterGUI():
     
     def __init__(self):
-        
         try:
             # create a DMD class object
             self.dlp = DMD()
             # send wakeup to controller
             self.dlp.wake_up()
-            time.sleep(1)
+            # set to idle mode to preserve DMD lifetime
+            self.dlp.idle_on()
+            # change to pattern on the fly mode
+            self.dlp.change_mode(3)
         except:
             print('No usb connection to projector at start up.')
         
@@ -1377,6 +1460,9 @@ class PycrafterGUI():
             self.activate_standby_button.config(background='green', text="Activate Standby")
         else:
             self.activate_standby_button.config(background='red', text="Wake Up")
+            
+            
+        #self.dlp.test_read()
         
         self.Gui.after(10, self.gui_logic)
         
@@ -1430,11 +1516,38 @@ class PycrafterGUI():
           
             print("\n" + self.sequence_param_file_name)
         
-        # load and save images as numpy arrays
-        self.load_images(True)
+        
         
         # load and save the image parameters
         self.load_image_sequence_setting(True)
+        
+        # load and save images as numpy arrays
+        self.load_images(True)
+        
+        
+                    
+        # check that the length of the parameters is te same like the image
+        # list
+        if (len(self.image_names) == len(self.images) and 
+            len(self.image_index) == len(self.images) and  
+             len(self.image_brightness) == len(self.images) and  
+              len(self.image_exposure) == len(self.images) and  
+               len(self.image_dark_time) == len(self.images) and  
+                len(self.image_trigger_out) == len(self.images) and 
+                 len(self.image_trigger_in) == len(self.images)):
+                     self.is_data_loaded = True
+        else:
+            raise Exception('Sequence parameter length is not equal the' + 
+                            ' number of loaded images. Please check length of your' + 
+                            ' image parameters and your number of images.' + 
+                            (' Number of images is %d.' %(len(self.images)) ))
+            self.is_data_loaded = False
+
+        
+        
+        self.dlp.idle_on()
+        self.dlp.set_led_pwm(0)
+    
         
         
     def load_image_sequence_setting(self, debug=False):
@@ -1504,34 +1617,21 @@ class PycrafterGUI():
             print(self.image_trigger_out)
             print('\n')
             
-            
-        # check that the length of the parameters is te same like the image
-        # list
-        if (len(self.image_names) == len(self.images) and 
-            len(self.image_index) == len(self.images) and  
-             len(self.image_brightness) == len(self.images) and  
-              len(self.image_exposure) == len(self.images) and  
-               len(self.image_dark_time) == len(self.images) and  
-                len(self.image_trigger_out) == len(self.images) and 
-                 len(self.image_trigger_in) == len(self.images)):
-                     self.is_data_loaded = True
-        else:
-            raise Exception('Sequence parameter length is not equal the' + 
-                            ' number of loaded images. Please check length of your' + 
-                            ' image parameters and your number of images.' + 
-                            (' Number of images is %d.' %(len(self.images)) ))
-            self.is_data_loaded = False
 
         
     def load_images(self, debug=False):
         self.images = []
         # load in images as list of list of numpy arrays
-        for image_file_name in self.image_file_name_list:
+        
+        for image_name in self.image_names:
+            
+            full_image_name = os.path.join(
+                self.sequence_folder_name, image_name)
             
             if debug:
-                print("fetching image %s " % image_file_name)
+                print("fetching image %s " % image_name)
                 
-            image = [numpy.asarray(PIL.Image.open(image_file_name))]
+            image = [numpy.asarray(PIL.Image.open(full_image_name))]
             self.images.append(image)
             
             if debug:
@@ -1547,6 +1647,19 @@ class PycrafterGUI():
         
         print(len(self.images))
         
+        """
+        for i, index in  enumerate(self.image_index):
+            if i + 1 in self.image_index:
+                im_index = self.image_index.index(i + 1)
+                print(im_index)
+                print(self.image_names[im_index]+ '\n')
+                exposures.append( [self.image_exposure[im_index]] * 30 )
+                dark_times.append( [self.image_dark_time[im_index]] * 30 )
+                trigger_ins.append( [self.image_trigger_in[im_index]] * 30 )
+                trigger_outs.append( [self.image_trigger_out[im_index]] * 30 )
+           """     
+               
+        
         # create new list's in order to start the sequence
         for index, image in  enumerate(self.images):
             
@@ -1556,7 +1669,9 @@ class PycrafterGUI():
             dark_times.append( [self.image_dark_time[index]] * 30 )
             trigger_ins.append( [self.image_trigger_in[index]] * 30 )
             trigger_outs.append( [self.image_trigger_out[index]] * 30 )
+        
 
         self.dlp.show_image_sequence(self.images, self.image_brightness, 
-                                     exposures,  dark_times, trigger_ins,
-                                     trigger_outs, True)  
+                                 exposures,  dark_times, trigger_ins,
+                                 trigger_outs, True)  
+        

@@ -1,5 +1,5 @@
 # name; index; brightness; exposure [us]; dark_time [us]; trigger_in (0); trigger_out (1);
-test_image_x_y0.png; 1; 255; 100000; 0; 0; 1;
-test_image_x_y1.png; 2; 50; 100000; 0; 0; 1;
-test_image_x_y2.png; 3; 50; 100000; 0; 0; 1;
-test_image_x_y3.png; 4; 255; 100000; 0; 0; 1;
+test_image_x_y0.png; 1; 255; 3000000; 0; 0; 1;
+test_image_x_y1.png; 2; 255; 3000000; 0; 0; 1;
+test_image_x_y2.png; 3; 255; 3000000; 0; 0; 1;
+test_image_x_y3.png; 4; 255; 3000000; 0; 0; 1;
