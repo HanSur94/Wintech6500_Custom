@@ -4,13 +4,13 @@ import PIL.Image
 import time
 import os
 
-folder_name = "./test_image_x_y"
+folder_name = "./test_image_x_y_2"
 image_format = ".png"
 
 exposure_time = 3000000
 dark_time = 0
 
-brightness = [255,128,128,255]
+brightness = [255,255,255,255]
 exposure = [exposure_time] * 30
 dark_time = [dark_time] * 30
 trigger_in = [False] * 30
@@ -27,6 +27,7 @@ for file in os.listdir(folder_name):
         file_name = os.path.join(folder_name, file)
         print("fetching image %s " % file_name)
         image = [numpy.asarray(PIL.Image.open(file_name))]
+        print(image)
         images.append(image)
         
 for image in images:
@@ -35,9 +36,12 @@ for image in images:
     trigger_ins.append(trigger_in)
     trigger_outs.append(trigger_out)
     
+print(exposures)
+    
+
 # create a DMD class object
 dlp = pycrafter6500.DMD()
 
+
 dlp.show_image_sequence(images, brightness, exposures, dark_times, trigger_ins, 
-                        trigger_outs, True)    
-    
+                        trigger_ins,  trigger_outs, True)
