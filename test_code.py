@@ -4,7 +4,7 @@ import PIL.Image
 import time
 import os
 
-folder_name = "./test_image_x_y_2"
+folder_name = "./test_image_x_y"
 image_format = ".png"
 
 exposure_time = 3000000
@@ -38,10 +38,11 @@ for image in images:
     
 print(exposures)
     
-
+"""
 # create a DMD class object
 dlp = pycrafter6500.DMD()
 
 
 dlp.show_image_sequence(images, brightness, exposures, dark_times, trigger_ins, 
                         trigger_ins,  trigger_outs, True)
+"""
