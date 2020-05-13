@@ -943,7 +943,7 @@ class DMD():
             self.i_list.append(i)
             
     def encoding_merging_image(self, images, exposure, trigger_in, dark_time,
-                        trigger_out, repetition_number):
+                        trigger_out, repetition_number, debug=False):
         self.stop_sequence()
 
         arr = []
@@ -958,16 +958,18 @@ class DMD():
         sizes = []
 
         for i in range(int((num - 1) / 24 + 1)):
-            print('merging...')
+            if debug:
+                print('merging...')
 
             if i < ((num - 1) / 24):
                 image_data = merge_images(arr[i * 24:(i + 1) * 24])
             else:
                 image_data = merge_images(arr[i * 24:])
-
-            print('encoding...')
+            
+            if debug:
+                print('encoding...')
+                
             image_data, size = encode(image_data)
-
             encoded_images.append(image_data)
             sizes.append(size)
             
@@ -989,6 +991,8 @@ class DMD():
             
     def upload_image(self, images, encoded_images, sizes):
         
+        upload_time = time.process_time()
+        
         self.stop_sequence()
 
         arr = []
@@ -1004,7 +1008,7 @@ class DMD():
             self.set_bmp(int((num - 1) / 24 - i),
                          sizes[int((num - 1) / 24 - i)])
 
-            print('uploading...')
+            print('\nuploading...')
 
             """
             Seems like that the size index is too big. This results
@@ -1015,6 +1019,9 @@ class DMD():
 
             self.load_bmp(encoded_images[int((num - 1) / 24 - i)],
                           sizes[int((num - 1) / 24 - i)])
+            
+        upload_time = time.process_time() - upload_time
+        print('\nupload time [s]: %f' % upload_time)
         
         
 
@@ -1138,28 +1145,32 @@ class DMD():
         # minimum wait time in sec to have enough time for a single image to 
         # be displayed
         minimum_wait_time = 0.01
+        
         # stop any already existing sequence
         self.stop_sequence()
         self.set_led_pwm(0)
         self.idle_off()
+        
         # change to pattern on the fly mode
         self.change_mode(3)
         
         self.size_list = []
         self.encoded_images_list = []
+
         
-        upload_time = 0
+        print("\n- ENCODING IMAGES -")
         
         for index, image in enumerate(images):
-            print("\n encoding image %d" % index)
+            print("\nencoding image %d" % index)
             self.encoding_merging_image(image, exposures[index],
                                         trigger_ins[index], dark_times[index],
-                                        trigger_outs[index], 1)
+                                        trigger_outs[index], 1, debug)
 
         for index, image in enumerate(images):
             
             if debug:
-                print("image Index %d " % index)
+                print("- DEBUG PARAMETERS -")
+                print("\n image Index %d " % index)
                 print('\n current image settings:')
                 print('\n brightness: %d' % brightness[index])
                 print('\n exposure [us]: %d' % exposures[index][0] )
@@ -1167,24 +1178,21 @@ class DMD():
                 print('\n trigger in: %s' %  trigger_ins[index][0])
                 print('\n trigger out: %s' % trigger_outs[index][0])
             
-            upload_time = time.process_time() - upload_time
-            """
-            self.define_sequence(image, exposures[index], trigger_ins[index],
-                                 dark_times[index], trigger_outs[index], 1)
-            """
+            
+            print("\n- UPLOAD IMAGE -")
             
             self.upload_image(image, self.encoded_images_list[index], 
-                              self.sizes_list[index], )
-            
-            if debug:
-                print("upload time [s]: %f" % upload_time)
-        
+                              self.sizes_list[index])
+
             # start sequence
             self.set_led_pwm(brightness[index])
+            
+            
+            
             self.start_sequence()
             
             if debug:
-                print("display image")
+                print("\n- DISPLAY IMAGE -")
                 
             # wait some time, therefore projector can finish displaying the image
             waiting_time = (exposures[index][0] + dark_times[index][0]) / 1000000
@@ -1276,7 +1284,7 @@ class DMD():
             time.sleep(waiting_time + minimum_wait_time)
             
             if debug:
-                print('\nwaited time [s]: %f' % (waiting_time + minimum_wait_time))
+                print('\n total waited time [s]: %f' % (waiting_time + minimum_wait_time))
             
             print('\n')
             self.set_led_pwm(0)
