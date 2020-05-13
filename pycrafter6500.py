@@ -1148,8 +1148,6 @@ class DMD():
         self.set_led_pwm(0)
         self.idle_off()
         
-        
-
         for index, image in enumerate(images):
             
             if debug:
@@ -1161,7 +1159,6 @@ class DMD():
                 print('\n dark time [us]: %d' % dark_times[index][0])
                 print('\n trigger in: %s' %  trigger_ins[index][0])
                 print('\n trigger out: %s' % trigger_outs[index][0])
-            
             
             print("\n- UPLOAD IMAGE -")
             self.upload_image(image, self.encoded_images_list[index], 
@@ -1187,7 +1184,7 @@ class DMD():
 
         self.stop_sequence()
         self.set_led_pwm(0)
-        self.idle_on()
+        #self.idle_on()
             
     def show_image_sequence(self, images, brightness, exposures, dark_times,
                             trigger_ins,  trigger_outs, debug=False):
@@ -1611,6 +1608,7 @@ class PycrafterGUI():
          else:
              self.dlp.wake_up()
              self.dlp.dmd_unpark()
+             self.is_encoded = False
              self.is_idle = False
         
         
@@ -1625,10 +1623,9 @@ class PycrafterGUI():
         self.load_image_sequence_data(True)
         
     def load_image_sequence_data(self, debug=False):
-        
+        self.is_encoded = False
+
         # find sequance_param.txt
-        
-        
         self.sequence_param_file_name = "empty"
         for file_name in os.listdir(self.sequence_folder_name):
             name, ext = os.path.splitext(file_name)
@@ -1804,7 +1801,14 @@ class PycrafterGUI():
                 trigger_outs.append( [self.image_trigger_out[im_index]] * 30 )
                 images_sorted.append(self.images[im_index])
                 
+                
+        print(exposures)
+        print(dark_times)
+        print(trigger_ins)
+        print(trigger_outs)
+                
         # change to pattern on the fly mode
+        self.dlp.idle_off()
         self.dlp.change_mode(3)
         
         print("\n- ENCODING IMAGES -")
@@ -1812,6 +1816,10 @@ class PycrafterGUI():
         
         for index, image in enumerate(images_sorted):
             print("\nencoding image %d" % index)
+            print(exposures[index])
+            print(dark_times[index])
+            print(trigger_ins[index])
+            print(trigger_outs[index])
             self.dlp.encoding_merging_image(image, exposures[index],
                                         trigger_ins[index], dark_times[index],
                                         trigger_outs[index], 1, True)
