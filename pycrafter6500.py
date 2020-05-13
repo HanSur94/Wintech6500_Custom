@@ -858,7 +858,7 @@ class DMD():
         self.usb_command('w', 0x00, 0x1a, 0x2a, payload)
         self.check_for_errors()
 
-    def load_bmp(self, image, size):
+    def load_bmp(self, image, size, debug=False):
         """
         Upload a .bmp image.
 
@@ -888,7 +888,8 @@ class DMD():
 
         for i in range(int(pack_num)):
             if i % 100 == 0:
-                print(i, pack_num)
+                if debug:
+                    print(i, pack_num)
 
             payload = []
 
@@ -919,13 +920,7 @@ class DMD():
             self.usb_command('w', 0x11, 0x1a, 0x2b, payload)
 
             self.check_for_errors()
-        
-        print(time.clock() - t)  # print time
-        
-        
-        
-    
-        
+
     def encoding_merging_image_sequence(self, images):
         
         self.encoded_images_list = []
@@ -944,6 +939,8 @@ class DMD():
             
     def encoding_merging_image(self, images, exposure, trigger_in, dark_time,
                         trigger_out, repetition_number, debug=False):
+        
+        
         self.stop_sequence()
 
         arr = []
@@ -1151,20 +1148,7 @@ class DMD():
         self.set_led_pwm(0)
         self.idle_off()
         
-        # change to pattern on the fly mode
-        self.change_mode(3)
         
-        self.size_list = []
-        self.encoded_images_list = []
-
-        
-        print("\n- ENCODING IMAGES -")
-        
-        for index, image in enumerate(images):
-            print("\nencoding image %d" % index)
-            self.encoding_merging_image(image, exposures[index],
-                                        trigger_ins[index], dark_times[index],
-                                        trigger_outs[index], 1, debug)
 
         for index, image in enumerate(images):
             
@@ -1180,15 +1164,11 @@ class DMD():
             
             
             print("\n- UPLOAD IMAGE -")
-            
             self.upload_image(image, self.encoded_images_list[index], 
                               self.sizes_list[index])
 
             # start sequence
             self.set_led_pwm(brightness[index])
-            
-            
-            
             self.start_sequence()
             
             if debug:
@@ -1544,6 +1524,7 @@ class PycrafterGUI():
         self.image_trigger_out = []
         self.is_data_loaded = False
         self.is_idle = False
+        self.is_encoded = False
         
         # tk settings
         self.windowDimension = "200x200"
@@ -1567,26 +1548,42 @@ class PycrafterGUI():
                         background="blue")
         self.select_sequence_folder_button.grid(column=1, row=1)
         
+         # button for encoding a image sequence
+        self.encode_image_sequence_button = tk.Button(master=self.Gui,
+                                                      text="Encode Image Sequence",
+                       command=self.encoding_image_sequence,
+                       background="red")
+        self.encode_image_sequence_button.grid(column=1, row=2)
+        
         # button for starting a sequence
         self.start_image_sequence_button = tk.Button(master=self.Gui,
                                                        text="Start Image Sequence",
                         command=self.start_image_sequence,
                         background="red")
-        self.start_image_sequence_button.grid(column=1, row=2)
+        self.start_image_sequence_button.grid(column=1, row=3)
         
         # button for enable disable idle mode of the projector
         self.activate_standby_button = tk.Button(master=self.Gui,
                                                        text="Activate Standby",
                         command=self.activate_standby,
                         background="green")
-        self.activate_standby_button.grid(column=1, row=3)
+        self.activate_standby_button.grid(column=1, row=4)
+        
+    
         
     def gui_logic(self):
         # controlls the state of the gui
         if self.is_data_loaded == False or self.is_idle == True :
+            self.encode_image_sequence_button.config(state='disabled', background='red')
+        else:
+            self.encode_image_sequence_button.config(state='normal', background='green')
+            
+            
+        if  self.is_encoded == False or self.is_idle == True or self.is_data_loaded == False:
             self.start_image_sequence_button.config(state='disabled', background='red')
         else:
             self.start_image_sequence_button.config(state='normal', background='green')
+        
             
         if self.is_idle == False:
             self.activate_standby_button.config(background='green', text="Activate Standby")
@@ -1778,17 +1775,21 @@ class PycrafterGUI():
                     "Could not load all images." + 
                     "Image %s is not in the format .png or .jpg or .tif ." % (image_name))
                 
-    def start_image_sequence(self, debug=False):
+                
+                
+    def encoding_image_sequence(self, debug=False):
         
-        # init list's where the parameter list's will be saved in
+        self.dlp.size_list = []
+        self.dlp.encoded_images_list = []
+        
         exposures = []
         dark_times = []
         trigger_ins = []
         trigger_outs = []
         images_sorted = []
         
-        n1 = numpy.zeros((1080,1920),dtype=float)
-        n2 = n1
+        #n1 = numpy.zeros((1080,1920),dtype=float)
+        #n2 = n1
         
         print(len(self.images))
         
@@ -1802,9 +1803,54 @@ class PycrafterGUI():
                 trigger_ins.append( [self.image_trigger_in[im_index]] * 30 )
                 trigger_outs.append( [self.image_trigger_out[im_index]] * 30 )
                 images_sorted.append(self.images[im_index])
+                
+        # change to pattern on the fly mode
+        self.dlp.change_mode(3)
+        
+        print("\n- ENCODING IMAGES -")
+               
+        
+        for index, image in enumerate(images_sorted):
+            print("\nencoding image %d" % index)
+            self.dlp.encoding_merging_image(image, exposures[index],
+                                        trigger_ins[index], dark_times[index],
+                                        trigger_outs[index], 1, True)
+            
+        #print(self.dlp.encoded_images_list)
+        #print(self.dlp.sizes_list)
+        
+        self.is_encoded = True
+        
+       
+                
+    def start_image_sequence(self, debug=False):
+        
+        # init list's where the parameter list's will be saved in
+        exposures = []
+        dark_times = []
+        trigger_ins = []
+        trigger_outs = []
+        images_sorted = []
+        
+        #n1 = numpy.zeros((1080,1920),dtype=float)
+        #n2 = n1
+        
+        print(len(self.images))
+
+        
+        for i, index in  enumerate(self.image_index):
+            if i + 1 in self.image_index:
+                im_index = self.image_index.index(i + 1)
+                print(im_index)
+                print(self.image_names[im_index]+ '\n')
+                exposures.append( [self.image_exposure[im_index]] * 30 )
+                dark_times.append( [self.image_dark_time[im_index]] * 30 )
+                trigger_ins.append( [self.image_trigger_in[im_index]] * 30 )
+                trigger_outs.append( [self.image_trigger_out[im_index]] * 30 )
+                images_sorted.append(self.images[im_index])
 
                 #imgplot = plt.imshow([self.images[im_index]/129,n1,n2])
-        
+
         
         self.dlp.show_image_sequence_2(images_sorted, self.image_brightness, 
                                  exposures,  dark_times, trigger_ins,
