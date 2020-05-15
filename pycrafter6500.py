@@ -1493,7 +1493,15 @@ class DMD():
 class PycrafterGUI():
     
     def __init__(self):
-  
+        """
+        Initializing the Pycrafter GUI class, which also starts the Pycraffter 
+        GUI.
+
+        Returns
+        -------
+        None.
+
+        """
         try:
             # create a DMD class object
             self.dlp = DMD()
@@ -1507,7 +1515,7 @@ class PycrafterGUI():
             print('No usb connection to projector at start up.')
 
         
-        # gui data
+        # the parameters for the imagae sequences
         self.image_file_name_list = []
         self.sequence_param_file_name = "empty"
         self.images = []
@@ -1519,24 +1527,37 @@ class PycrafterGUI():
         self.image_dark_time = []
         self.image_trigger_in = []
         self.image_trigger_out = []
+        
+        # variables for the gui logic
         self.is_data_loaded = False
         self.is_idle = False
         self.is_encoded = False
         
-        # tk settings
+        # tkinter settings
         self.windowDimension = "200x200"
         self.Gui = tk.Tk()
         self.Gui.title("PycrafterGUI")
         self.Gui.geometry(self.windowDimension)
         
-         # Activate the gui loop
+        # run startup functions and gui loop
         self.Gui.update_idletasks()
         self.create_widgets()
         self.gui_logic()
-        #self.keep_dlp_awake()
         self.Gui.mainloop()
         
+        # write a function that pings the projector in a time intervall, which
+        # prevents the usb connection from falling asleep
+        #self.keep_dlp_awake()
+        
     def create_widgets(self):
+        """
+        Creates the widgets of the pycrafter gui.
+
+        Returns
+        -------
+        None.
+
+        """
         
         # button for selecting image folder
         self.select_sequence_folder_button = tk.Button(master=self.Gui,
@@ -1566,32 +1587,43 @@ class PycrafterGUI():
                         background="green")
         self.activate_standby_button.grid(column=1, row=4)
         
-    
-        
     def gui_logic(self):
-        # controlls the state of the gui
+        """
+        This function runs the gui logic and enables or diables the needed 
+        buttons.
+
+        Returns
+        -------
+        None.
+
+        """
+        # controll the encode image sequence button
         if self.is_data_loaded == False or self.is_idle == True :
             self.encode_image_sequence_button.config(state='disabled', background='red')
         else:
             self.encode_image_sequence_button.config(state='normal', background='green')
             
-            
+        # controlls the start image sequence button
         if  self.is_encoded == False or self.is_idle == True or self.is_data_loaded == False:
             self.start_image_sequence_button.config(state='disabled', background='red')
         else:
             self.start_image_sequence_button.config(state='normal', background='green')
         
-            
+        # controlls the standby/awake button    
         if self.is_idle == False:
             self.activate_standby_button.config(background='green', text="Activate Standby")
         else:
             self.activate_standby_button.config(background='red', text="Wake Up")
+            
+            
         """    
         try:    
             self.dlp.test_read()
         except:
             print('No usb connection to projector.')
          """   
+         
+         # let this function run once every second
         self.Gui.after(1000, self.gui_logic)
         
     def keep_dlp_awake(self):
