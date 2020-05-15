@@ -488,7 +488,6 @@ class DMD():
 
         """
         buffer = []
-
         flag_string = ''
         if mode == 'r':
             flag_string += '1'
@@ -822,8 +821,6 @@ class DMD():
             
         return payload
 
-        
-
     def set_bmp(self, index, size):
         """
         Send message to controler, that a .bmp will be uploaded.
@@ -873,6 +870,9 @@ class DMD():
             to encoding beforehand.
         size : int
             Number of bytes of the image.
+        debug : boolean, optional
+            If True, than debug messages will be displayed in the console.
+            The default is False.
 
         Returns
         -------
@@ -917,10 +917,11 @@ class DMD():
                 counter += 1
                 # print("Counter: %d" % counter)
                 # print(j)
+                
             self.usb_command('w', 0x11, 0x1a, 0x2b, payload)
-
             self.check_for_errors()
 
+    # TODO: remove this one???
     def encoding_merging_image_sequence(self, images):
         
         self.encoded_images_list = []
@@ -939,18 +940,47 @@ class DMD():
             
     def encoding_merging_image(self, images, exposure, trigger_in, dark_time,
                         trigger_out, repetition_number, debug=False):
-        
-        
+        """
+        This function merges, encodes an image and defines and uploads the
+        image sequence based on the given parameters.
+
+        Parameters
+        ----------
+         images : list list numpy array
+            A List containing list's each containing a single image 
+            represented by a numpy array.
+        exposure : list of list's of int
+            A List of list's of each containing 30 entries with the same 
+            value. Couldn't find a explanation for this data structure.
+        dark_time : list list int
+            List of list's each containing 30 entries with the same 
+            value. Couldn't find a explanation for this data structure.
+        trigger_in : list list bool
+            List of list's each containing if a trigger in signal is 
+            used or not represented as an boolean.
+        trigger_out : list of list's of bool
+            List of list's each containing if a trigger out signal is 
+            used or not represented as an boolean.
+        repetition_number: int
+            Number of repetitions for a defined image sequence and should be
+            set to 1 in this function.
+        debug : boolean, optional
+           If True, than debug messages will be displayed in the console.
+           The default is False.    
+
+        Returns
+        -------
+        None.
+
+        """
+        # stooping a previous sequence
         self.stop_sequence()
-
         arr = []
-
         for i in images:
             arr.append(i)  
             #arr.append(numpy.ones((1080,1920),dtype='uint8'))
 
         num = len(arr)
-
         encoded_images = []
         sizes = []
 
@@ -970,9 +1000,11 @@ class DMD():
             encoded_images.append(image_data)
             sizes.append(size)
             
+            # append enoded image data to a list for later uploading process
             self.encoded_images_list.append(encoded_images)
             self.sizes_list.append(sizes)
 
+            # here we define the pattern for the image
             if i < ((num - 1) / 24):
                 for j in range(i * 24, (i + 1) * 24):
                     self.define_pattern(j, exposure[j], 8, '100',
@@ -983,17 +1015,16 @@ class DMD():
                     self.define_pattern(j, exposure[j], 8, '100',
                                         trigger_in[j], dark_time[j],
                                         trigger_out[j], i, j - i * 24)
-
+                    
+        # configure the look up table of the DLP900
         self.configure_lut(num, repetition_number)
-            
+        
     def upload_image(self, images, encoded_images, sizes):
         
         upload_time = time.process_time()
-        
         self.stop_sequence()
-
         arr = []
-
+        
         for i in images:
             arr.append(i)  
             #arr.append(numpy.ones((1080,1920),dtype='uint8'))
@@ -1016,11 +1047,10 @@ class DMD():
 
             self.load_bmp(encoded_images[int((num - 1) / 24 - i)],
                           sizes[int((num - 1) / 24 - i)])
-            
+        
+        # show always the upload time
         upload_time = time.process_time() - upload_time
         print('\nupload time [s]: %f' % upload_time)
-        
-        
 
     def define_sequence(self, images, exposure, trigger_in, dark_time,
                         trigger_out, repetition_number):
@@ -1133,6 +1163,9 @@ class DMD():
         trigger_out : list of list's of bool
             List of list's each containing if a trigger out signal is 
             used or not represented as an boolean.
+        debug : boolean, optional
+           If True, than debug messages will be displayed in the console.
+           The default is False. 
 
         Returns
         -------
@@ -1212,6 +1245,9 @@ class DMD():
         trigger_out : list of list's of bool
             List of list's each containing if a trigger out signal is 
             used or not represented as an boolean.
+        debug : boolean, optional
+           If True, than debug messages will be displayed in the console.
+           The default is False. 
 
         Returns
         -------
@@ -1221,13 +1257,14 @@ class DMD():
         # minimum wait time in sec to have enough time for a single image to 
         # be displayed
         minimum_wait_time = 0.01
+        
         # stop any already existing sequence
         self.stop_sequence()
         self.set_led_pwm(0)
         self.idle_off()
+        
         # change to pattern on the fly mode
         self.change_mode(3)
-        
         upload_time = 0
         
         for index, image in enumerate(images):
@@ -1272,16 +1309,27 @@ class DMD():
         self.idle_on()
 
     def get_minimum_led_pattern_exposure(self):
-         self.usb_command('r', 0xff, 0x1A, 0x42, [])
-         self.read_reply()
+        """
+        This should get the minimum LED PWM value.
+
+        Returns
+        -------
+        None.
+
+        """
+        self.usb_command('r', 0xff, 0x1A, 0x42, [])
+        self.read_reply()
 
     def read_control_command(self):
+        
         self.usb_command('r', 0xff, 0x00, 0x15, [])
         self.read_reply()
         
     def read_status(self):
         """
-        Prints the current status in teh console......??????
+        Prints the current status in the console. Check the DLPC900 Programming
+        Guide fro more detailed informations.
+        https://www.ti.com/tool/DLPC900REF-SW#descriptionArea
 
         Returns
         -------
@@ -1294,6 +1342,9 @@ class DMD():
     def read_firmware(self):
         """
         Prints the current firmware in the console.
+        Check the DLPC900 Programming
+        Guide fro more detailed informations.
+        https://www.ti.com/tool/DLPC900REF-SW#descriptionArea
 
         Returns
         -------
@@ -1477,14 +1528,47 @@ class DMD():
         self.read_reply()
         
     def get_hardware_status(self):
+        """
+        Reads the current hardware status of the DLPC900 and prints it in the
+        console. Check the DLPC900 Programming
+        Guide fro more detailed informations.
+        https://www.ti.com/tool/DLPC900REF-SW#descriptionArea
+
+        Returns
+        -------
+        None.
+
+        """
         self.usb_command('r', 0xff, 0x1A, 0x0A, [])
         self.read_reply()
     
     def get_system_status(self):
+        """
+        Reads the current system status of the DLPC900 and prints it in the 
+        console. Check the DLPC900 Programming
+        Guide fro more detailed informations.
+        https://www.ti.com/tool/DLPC900REF-SW#descriptionArea
+
+        Returns
+        -------
+        None.
+
+        """
         self.usb_command('r', 0xff, 0x1A, 0x0B, [])
         self.read_reply()
     
     def get_main_status(self):
+        """
+        Reads the main status of the DLPC900 controller and prilnts it in the 
+        console. Check the DLPC900 Programming
+        Guide fro more detailed informations.
+        https://www.ti.com/tool/DLPC900REF-SW#descriptionArea
+
+        Returns
+        -------
+        None.
+
+        """
         self.usb_command('r', 0xff, 0x1A, 0x0C, [])
         self.read_reply()
         
@@ -1547,6 +1631,7 @@ class PycrafterGUI():
         
         # write a function that pings the projector in a time intervall, which
         # prevents the usb connection from falling asleep
+        # let it runs in a seperate process
         #self.keep_dlp_awake()
         
     def create_widgets(self):
@@ -1615,7 +1700,6 @@ class PycrafterGUI():
         else:
             self.activate_standby_button.config(background='red', text="Wake Up")
             
-            
         """    
         try:    
             self.dlp.test_read()
@@ -1627,24 +1711,54 @@ class PycrafterGUI():
         self.Gui.after(1000, self.gui_logic)
         
     def keep_dlp_awake(self):
+        """
+        Function that pings the projector to keep the usb connection awake.
+
+        Returns
+        -------
+        None.
+
+        """
         pass
             
-        #self.Gui.after(1000, self.keep_dlp_awake)
         
         
     def activate_standby(self):
-         if self.is_idle == False:
-             self.dlp.dmd_park()
-             self.dlp.stand_by()
-             self.is_idle = True
-         else:
-             self.dlp.wake_up()
-             self.dlp.dmd_unpark()
-             self.is_encoded = False
-             self.is_idle = False
+        """
+        Function that toggles the standby mode of the projector
+
+        Returns
+        -------
+        None.
+
+        """
+        if self.is_idle == False:
+            self.dlp.dmd_park()
+            self.dlp.stand_by()
+            self.is_idle = True
+        else:
+            self.dlp.wake_up()
+            self.dlp.dmd_unpark()
+            self.is_encoded = False
+            self.is_idle = False
         
-        
+
     def select_sequence_folder(self, debug=False):
+        """
+        Function that opens a dialog window in order to select the folder, that
+        contains the images and sequence parameter .txt file.
+
+        Parameters
+        ----------
+        debug : boolean, optional
+            If True, than debug messages will be displayed in the console.
+            The default is False.
+
+        Returns
+        -------
+        None.
+
+        """
         # open dialog window to select folder with images and sequence
         # parameter file
         self.sequence_folder_name = filedialog.askdirectory(initialdir = "./", 
@@ -1652,28 +1766,57 @@ class PycrafterGUI():
         if debug:
             print(self.sequence_folder_name)
             
+        # calls function to load in parameter and image data
         self.load_image_sequence_data(True)
         
     def load_image_sequence_data(self, debug=False):
+        """
+        This function loads in the parameter data and the image data from the 
+        selected folder.
+
+        Parameters
+        ----------
+        debug : boolean, optional
+             If True, than debug messages will be displayed in the console.
+             The default is False.
+
+        Raises
+        ------
+        Exception
+            Throws an excpetion, when the number of image parameters is not 
+            the same with number of loaded images.
+
+        Returns
+        -------
+        None.
+
+        """
+        # if we load in a new sequence, let the user encode again
         self.is_encoded = False
 
-        # find sequance_param.txt
+        # find sequance_param.txt and save full file name (path)
         self.sequence_param_file_name = "empty"
         for file_name in os.listdir(self.sequence_folder_name):
+            # get the file extension
             name, ext = os.path.splitext(file_name)
             full_file_name = os.path.join(
                 self.sequence_folder_name, file_name)
+            # only save if the image files have the following file extensions
             if ext == '.txt':
                 self.sequence_param_file_name = full_file_name
                 
-            # only save if the image files have the following file extensions
-                
-        print(self.sequence_param_file_name)
+        if debug:
+            print(self.sequence_param_file_name)
+            
+        # start function to fetch image paramters from the .txt file
         self.load_image_sequence_setting(True)
+        
+        # start a function to load in the images depending on the image names
+        # from the parameter .txt file
         self.load_images(True)
         
         # check that the length of the parameters is te same like the image
-        # list
+        # list and throw exception if needed
         if (len(self.image_names) == len(self.images) and 
             len(self.image_index) == len(self.images) and  
              len(self.image_brightness) == len(self.images) and  
@@ -1689,12 +1832,36 @@ class PycrafterGUI():
                             (' Number of images is %d.' %(len(self.images)) ))
             self.is_data_loaded = False
 
+        # TODO: maybe move this part to startup
+        # put the projector in idle mode and set led current to 0, because if
+        # we turn on the projector connected with a HDMI cable, then it will
+        # start to display a live image immedially    
         self.dlp.idle_on()
         self.dlp.set_led_pwm(0)
         
     def load_image_sequence_setting(self, debug=False):
-        
-        # clear all lists before appending to them
+        """
+        Function to fetch the different parameters for different images from 
+        the parameter .txt file.
+
+        Parameters
+        ----------
+        debug : boolean, optional
+             If True, than debug messages will be displayed in the console.
+             The default is False.
+
+        Raises
+        ------
+        Exception
+            Throws an exception if the parameter text file could not be found
+            or opened.
+
+        Returns
+        -------
+        None.
+
+        """
+        # clear all image parameter lists before appending to them
         self.parameters = []
         self.image_names = []
         self.image_index = []
@@ -1704,7 +1871,7 @@ class PycrafterGUI():
         self.image_trigger_in = []
         self.image_trigger_out = []
         
-        # open file with settings and put them in a list
+        # try to open the file and read content as lines (seperated lists) 
         try:
             file = open(self.sequence_param_file_name,'r')
         except:
@@ -1715,11 +1882,13 @@ class PycrafterGUI():
         lines = file.readlines()
         file.close()
         
-        #remove comments
+        # TODO: Here we should remove comments!!!
+        # remove comments tsrating wint an '#'
         for line in lines:
             if '#' in line:
                 lines.remove(line)
-                
+        # TODO: Here we should be able to remove uneccessary '\n' from the
+        #       lines          
         for parameter in self.parameters:
             for text in parameter:
                 print(text)
@@ -1734,10 +1903,10 @@ class PycrafterGUI():
         print(self.parameters)
             
         # remove the header line
-        #self.parameters.remove(self.parameters[0])
+        # self.parameters.remove(self.parameters[0])
             
-        # iterate through each lsit and save all different parameters of each 
-        # picture in a seperate list
+        # iterate through each list and save all different parameters of each 
+        # picture in seperate list's
         for parameter in self.parameters:
             self.image_names.append(str(parameter[0]))
             self.image_index.append(int(parameter[1]))
@@ -1756,6 +1925,7 @@ class PycrafterGUI():
             elif 'False' in parameter[6] or 'false' in parameter[6] or '0' in parameter[6]:
                 self.image_trigger_out.append(0)
 
+        # show all image parameers if needed
         if debug:
             print('\n')
             print('Input from %s' % self.sequence_param_file_name)
@@ -1779,15 +1949,40 @@ class PycrafterGUI():
 
         
     def load_images(self, debug=False):
+        """
+        Function to load all images, that are noted in the image parameter
+        .txt file.
+
+        Parameters
+        ----------
+        debug : boolean, optional
+             If True, than debug messages will be displayed in the console.
+             The default is False.
+
+        Raises
+        ------
+        Exception
+            Throws an exception if the parameter text file could not be found
+            or opened.
+
+        Returns
+        -------
+        None.
+
+        """
         self.images = []
-        # load in images as list of list of numpy arrays
         
+        # load in images as list of list of numpy arrays
+        # load all images from the previous created image list 
         for image_name in self.image_names:
             
             full_image_name = os.path.join(
                 self.sequence_folder_name, image_name)
             
             name, ext = os.path.splitext(full_image_name)
+            
+            # TODO: add .bmp
+            # accept only images with a specific file extension
             if ext == '.png' or ext == '.jpg' or ext == '.tif':
             
                 if debug:
@@ -1804,12 +1999,36 @@ class PycrafterGUI():
                     "Could not load all images." + 
                     "Image %s is not in the format .png or .jpg or .tif ." % (image_name))
                 
+            # TODO: Here we should also check the size of the images, since
+            #       only 2D arrays are usable, therefore make all images
+            #       as greyscale images and throw a warning if image size is
+            #       too big.
+                
+            # TODO: show images that where loaded in as a picture in the spyder
+            #       console
                 
                 
     def encoding_image_sequence(self, debug=False):
+        """
+        Function that starts the encoding of the images and send the 
+        information to the DLP900 chip.
+
+        Parameters
+        ----------
+        debug : boolean, optional
+             If True, than debug messages will be displayed in the console.
+             The default is False.
+
+        Returns
+        -------
+        None.
+
+        """
         
+        # reset lists from the dlp class for the encoded image data
         self.dlp.size_list = []
         self.dlp.encoded_images_list = []
+        
         
         exposures = []
         dark_times = []
@@ -1819,10 +2038,13 @@ class PycrafterGUI():
         
         #n1 = numpy.zeros((1080,1920),dtype=float)
         #n2 = n1
+        if debug:
+            print(len(self.images))
         
-        print(len(self.images))
-        
+        # sort the images sequence according to the index numbers from the 
+        # txt parameter file.
         for i, index in  enumerate(self.image_index):
+            # find all paramter entries for the needed index
             if i + 1 in self.image_index:
                 im_index = self.image_index.index(i + 1)
                 print(im_index)
@@ -1833,19 +2055,20 @@ class PycrafterGUI():
                 trigger_outs.append( [self.image_trigger_out[im_index]] * 30 )
                 images_sorted.append(self.images[im_index])
                 
+        if debug:
+            print(exposures)
+            print(dark_times)
+            print(trigger_ins)
+            print(trigger_outs)
                 
-        print(exposures)
-        print(dark_times)
-        print(trigger_ins)
-        print(trigger_outs)
-                
-        # change to pattern on the fly mode
+        # TODO: is it here needed
+        # change to pattern on the fly mode just for safety
         self.dlp.idle_off()
         self.dlp.change_mode(3)
         
         print("\n- ENCODING IMAGES -")
                
-        
+        # take all sorted lists and encode them and send to DLP900
         for index, image in enumerate(images_sorted):
             print("\nencoding image %d" % index)
             print(exposures[index])
@@ -1856,14 +2079,26 @@ class PycrafterGUI():
                                         trigger_ins[index], dark_times[index],
                                         trigger_outs[index], 1, True)
             
-        #print(self.dlp.encoded_images_list)
-        #print(self.dlp.sizes_list)
-        
+        # if successfull enable start of the sequence
         self.is_encoded = True
         
        
                 
     def start_image_sequence(self, debug=False):
+        """
+        This function will start the image sequence.
+
+        Parameters
+        ----------
+        debug : boolean, optional
+             If True, than debug messages will be displayed in the console.
+             The default is False.
+
+        Returns
+        -------
+        None.
+
+        """
         
         # init list's where the parameter list's will be saved in
         exposures = []
@@ -1871,13 +2106,10 @@ class PycrafterGUI():
         trigger_ins = []
         trigger_outs = []
         images_sorted = []
-        
-        #n1 = numpy.zeros((1080,1920),dtype=float)
-        #n2 = n1
-        
+    
         print(len(self.images))
 
-        
+        # sorting all parameters again.... and send to the dlp
         for i, index in  enumerate(self.image_index):
             if i + 1 in self.image_index:
                 im_index = self.image_index.index(i + 1)
@@ -1888,19 +2120,8 @@ class PycrafterGUI():
                 trigger_ins.append( [self.image_trigger_in[im_index]] * 30 )
                 trigger_outs.append( [self.image_trigger_out[im_index]] * 30 )
                 images_sorted.append(self.images[im_index])
-
-                #imgplot = plt.imshow([self.images[im_index]/129,n1,n2])
-
         
         self.dlp.show_image_sequence_2(images_sorted, self.image_brightness, 
                                  exposures,  dark_times, trigger_ins,
                                  trigger_outs, True) 
         
-        
-        #self.dlp.encoding_merging_image_sequence(self.images)
-        #print(self.dlp.encoded_images_list)
-        """
-        for i in self.encoded_images_list:
-            print(i)
-        for i in self.size_list:
-            print(i)"""
