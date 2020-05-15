@@ -1991,6 +1991,8 @@ class PycrafterGUI():
                 image = [numpy.asarray(PIL.Image.open(full_image_name))]
                 self.images.append(image)
                 
+                # print images in the diagram window
+                
                 if debug:
                     print(self.images)
                     
