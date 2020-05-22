@@ -29,6 +29,7 @@ import os
 import tkinter as tk
 from tkinter import filedialog
 import threading
+import RLE
 
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
@@ -373,6 +374,12 @@ def encode(image):
     print('encoding time [s]: %f' % upload_time)
 
     return bit_string, byte_count
+
+
+def encode2(orgimg, img1):
+
+     payload = RLE.encodeImage(orgimg, img1.size[0], img1.size[1], img1.mode)   
+     return payload
 
 
 class DMD():
