@@ -1177,6 +1177,9 @@ class DMD():
         # be displayed
         minimum_wait_time = 0.1
         
+        display_time = 0
+        wait_time = 0
+        
         # stop any already existing sequence
         self.stop_sequence()
         self.set_led_pwm(0)
@@ -1207,21 +1210,39 @@ class DMD():
             """
             self.set_led_pwm(brightness[index])
             #time.sleep(1)
+            start_time = time.process_time()*1e6
+            display_time = 0
+            print('start time: %f' %(start_time))
             self.start_sequence()
+            #time.sleep(0.01+exposures[index][0])
             
-            if debug:
-                print("\n- DISPLAY IMAGE -")
+        
+            while display_time <= exposures[index][0]:
+                display_time = time.process_time()*1e6 - start_time
                 
             # wait some time, therefore projector can finish displaying the image
-            waiting_time = (exposures[index][0] + dark_times[index][0]) / 1000000
-            time.sleep(waiting_time + minimum_wait_time)
-            
-            if debug:
-                print('\nwaited time [s]: %f' % (waiting_time + minimum_wait_time))
-            
-            print('\n')
+            #waiting_time = (exposures[index][0] + dark_times[index][0]) / 1000000
+
             self.set_led_pwm(0)
             self.stop_sequence()
+            start_time = time.process_time()*1e6
+            
+            while wait_time <= dark_times[index][0]:
+                wait_time = time.process_time()*1e6 - start_time
+            
+            
+            print('display time: %f' %(display_time))
+            if debug:
+                print("\n- DISPLAY IMAGE -")
+            
+            
+            if not dark_times[index][0] == 0:
+                time.sleep(dark_times[index][0])
+            
+            if debug:
+                print('\nwaited time [s]: %f' % (dark_times[index][0]))
+            
+            print('\n')
 
         self.stop_sequence()
         self.set_led_pwm(0)
@@ -1264,7 +1285,7 @@ class DMD():
         """
         # minimum wait time in sec to have enough time for a single image to 
         # be displayed
-        minimum_wait_time = 0.01
+        minimum_wait_time = 0.00
         
         # stop any already existing sequence
         self.stop_sequence()
@@ -1302,11 +1323,11 @@ class DMD():
                 print("display image")
                 
             # wait some time, therefore projector can finish displaying the image
-            waiting_time = (exposures[index][0] + dark_times[index][0]) / 1000000
-            time.sleep(waiting_time + minimum_wait_time)
+           # waiting_time = (exposures[index][0] + dark_times[index][0]) / 1000000
+            #time.sleep(waiting_time)
             
-            if debug:
-                print('\n total waited time [s]: %f' % (waiting_time + minimum_wait_time))
+            #if debug:
+            #    print('\n total waited time [s]: %f' % (waiting_time + minimum_wait_time))
             
             print('\n')
             self.set_led_pwm(0)
