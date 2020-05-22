@@ -6,5 +6,5 @@ Created on Wed May  6 14:58:30 2020
 """
 
 import pycrafter6500
-#dlp = pycrafter6500.DMD()
+dlp = pycrafter6500.DMD()
 GUI = pycrafter6500.PycrafterGUI()

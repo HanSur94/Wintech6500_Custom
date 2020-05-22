@@ -29,6 +29,7 @@ import os
 import tkinter as tk
 from tkinter import filedialog
 import threading
+
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
@@ -879,7 +880,7 @@ class DMD():
         None.
 
         """
-        t = time.clock()  # count time
+        #t = time.clock()  # count time
 
         # print("Image Length: %d" % len(image))
         pack_num = size / 504 + 1
@@ -1174,7 +1175,7 @@ class DMD():
         """
         # minimum wait time in sec to have enough time for a single image to 
         # be displayed
-        minimum_wait_time = 0.01
+        minimum_wait_time = 0.1
         
         # stop any already existing sequence
         self.stop_sequence()
@@ -1198,7 +1199,14 @@ class DMD():
                               self.sizes_list[index])
 
             # start sequence
+            """
+            self.set_led_pwm(0)
+            time.sleep(0.1)
+            self.set_led_pwm(128)
+            time.sleep(0.1)
+            """
             self.set_led_pwm(brightness[index])
+            #time.sleep(1)
             self.start_sequence()
             
             if debug:
@@ -1586,6 +1594,8 @@ class PycrafterGUI():
         None.
 
         """
+        
+    
         try:
             # create a DMD class object
             self.dlp = DMD()
@@ -1597,7 +1607,7 @@ class PycrafterGUI():
             self.dlp.change_mode(3)
         except:
             print('No usb connection to projector at start up.')
-
+      
         
         # the parameters for the imagae sequences
         self.image_file_name_list = []
@@ -1835,10 +1845,11 @@ class PycrafterGUI():
         # TODO: maybe move this part to startup
         # put the projector in idle mode and set led current to 0, because if
         # we turn on the projector connected with a HDMI cable, then it will
-        # start to display a live image immedially    
+        # start to display a live image immedially
+        """
         self.dlp.idle_on()
         self.dlp.set_led_pwm(0)
-        
+        """
     def load_image_sequence_setting(self, debug=False):
         """
         Function to fetch the different parameters for different images from 
@@ -1892,7 +1903,8 @@ class PycrafterGUI():
         for parameter in self.parameters:
             for text in parameter:
                 print(text)
-                if text == '\n':
+                if '\n' in parameter:
+                    print('yes')
                     parameter.remove(text)
         
         # split each string in a list by ';' and save splitted strings in 
@@ -1981,21 +1993,15 @@ class PycrafterGUI():
             
             name, ext = os.path.splitext(full_image_name)
             
-            # TODO: add .bmp
-            # accept only images with a specific file extension
-            if ext == '.png' or ext == '.jpg' or ext == '.tif':
+            if ext == '.png' or ext == '.jpg' or ext == '.tif' or ext == '.bmp':
             
                 if debug:
-                    print("fetching image %s " % full_image_name)
+                    print("\nfetching image %s " % full_image_name)
                     
                 image = [numpy.asarray(PIL.Image.open(full_image_name))]
+                self.plot_image(image)
                 self.images.append(image)
-                
-                # print images in the diagram window
-                
-                if debug:
-                    print(self.images)
-                    
+
             else:
                 raise Exception(
                     "Could not load all images." + 
@@ -2009,6 +2015,24 @@ class PycrafterGUI():
             # TODO: show images that where loaded in as a picture in the spyder
             #       console
                 
+    def plot_image(self, image):
+        """
+        Function to plot the loaded images in the Spyder GUI
+
+        Parameters
+        ----------
+        image : TYPE
+            DESCRIPTION.
+
+        Returns
+        -------
+        None.
+
+        """
+        fig = plt.figure()
+        plt.imshow(image[0], cmap='gray')
+        plt.colorbar()
+        plt.show()
                 
     def encoding_image_sequence(self, debug=False):
         """
@@ -2041,11 +2065,13 @@ class PycrafterGUI():
         #n1 = numpy.zeros((1080,1920),dtype=float)
         #n2 = n1
         if debug:
-            print(len(self.images))
+            print('number of images to encode: %d' %(len(self.images)))
         
         # sort the images sequence according to the index numbers from the 
         # txt parameter file.
         for i, index in  enumerate(self.image_index):
+            print('i=%d' %(i))
+            print('indey=%d'%(index))
             # find all paramter entries for the needed index
             if i + 1 in self.image_index:
                 im_index = self.image_index.index(i + 1)
