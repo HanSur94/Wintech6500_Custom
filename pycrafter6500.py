@@ -30,6 +30,7 @@ import tkinter as tk
 from tkinter import filedialog
 import threading
 import RLE
+import encoding_functions
 
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
@@ -193,7 +194,7 @@ def encode(image):
         Is the number of bytes from the bit string.
 
     """
-    upload_time = time.process_time()
+    #upload_time = time.process_time()
     
     # header creation
     byte_count = 48
@@ -362,16 +363,118 @@ def encode(image):
 
     size = byte_count
 
-    print(size)
+    #print(size)
 
     total = convert_num_to_bit_string(size, 32)
     total = bits_to_bytes(total)
     for i in range(len(total)):
+        print(total)
         bit_string[i + 8] = total[i]
         
         
-    upload_time = time.process_time() - upload_time
-    print('encoding time [s]: %f' % upload_time)
+    #upload_time = time.process_time() - upload_time
+    #print('encoding time [s]: %f' % upload_time)
+
+    return bit_string, byte_count
+
+
+
+def encode7(image):
+    """
+    Encode a image into a bit string.
+
+    Parameters
+    ----------
+    image : numpy array
+        Image represented as an numpy array. Bit depth is 8.
+
+    Returns
+    -------
+    bit_string : str
+        Is the encoded image represented as bits.
+    byte_count : int
+        Is the number of bytes from the bit string.
+
+    """
+    #upload_time = time.process_time()
+    
+    # header creation
+    byte_count = 48
+    bit_string = []
+
+    bit_string.append(0x53)
+    bit_string.append(0x70)
+    bit_string.append(0x6c)
+    bit_string.append(0x64)
+
+    width = convert_num_to_bit_string(1920, 16)
+    width = bits_to_bytes(width)
+    for i in range(len(width)):
+        bit_string.append(width[i])
+
+    height = convert_num_to_bit_string(1080, 16)
+    height = bits_to_bytes(height)
+    for i in range(len(height)):
+        bit_string.append(height[i])
+
+    total = convert_num_to_bit_string(0, 32)
+    total = bits_to_bytes(total)
+    for i in range(len(total)):
+        bit_string.append(total[i])
+
+    for i in range(8):
+        bit_string.append(0xff)
+
+    """
+    Setting the background color to black.
+    """
+    for i in range(4):
+        bit_string.append(0x00)
+
+    bit_string.append(0x00)
+
+    """
+    Enhanced run length encoding
+    To achieve higher compression ratios, this compression format takes
+    advantage of the similarities from line-to-line and uses one or two
+    bytes to encode the length.
+    """
+    bit_string.append(0x02)
+
+    bit_string.append(0x01)
+
+    for i in range(21):
+        bit_string.append(0x00)
+
+    n = 0
+    i = 0
+    j = 0
+
+    while i < 1080:
+        while j < 1919:
+            if numpy.all(image[i, j, :] == image[i, j+1, :]):
+                print(image[i,j,:])
+                print(image[i,j+1,:])
+            j += 1
+            
+        i += 1
+        j = 0
+        #print(i)
+ 
+
+    size = byte_count
+
+    #print(size)
+
+    total = convert_num_to_bit_string(size, 32)
+    total = bits_to_bytes(total)
+    for i in range(len(total)):
+        print(total)
+        bit_string[i + 8] = total[i]
+        
+        
+    #upload_time = time.process_time() - upload_time
+    #print('encoding time [s]: %f' % upload_time)
 
     return bit_string, byte_count
 
@@ -380,7 +483,416 @@ def encode2(orgimg, img1):
 
      payload = RLE.encodeImage(orgimg, img1.size[0], img1.size[1], img1.mode)   
      return payload
+ 
+def encode3(img):
+    #bit_string = []
+    
+    # header creation
+    byte_count = 48
+    bit_string = []
 
+    bit_string.append(0x53)
+    bit_string.append(0x70)
+    bit_string.append(0x6c)
+    bit_string.append(0x64)
+
+    width = convert_num_to_bit_string(1920, 16)
+    width = bits_to_bytes(width)
+    for i in range(len(width)):
+        bit_string.append(width[i])
+
+    height = convert_num_to_bit_string(1080, 16)
+    height = bits_to_bytes(height)
+    for i in range(len(height)):
+        bit_string.append(height[i])
+
+    total = convert_num_to_bit_string(1080*1920+48,32)
+    total = bits_to_bytes(total)
+    for i in range(len(total)):
+        bit_string.append(total[i])
+
+    for i in range(8):
+        bit_string.append(0xff)
+
+    """
+    Setting the background color to black.
+    """
+    for i in range(4):
+        bit_string.append(0x00)
+
+    bit_string.append(0x00)
+    
+    """
+    Uncompressed data
+    """
+    bit_string.append(0x00)
+    bit_string.append(0x01)
+
+    for i in range(21):
+        bit_string.append(0x00)
+    
+    
+    for i in range(len(img)):
+        #sub_payload = []
+        #print("i=%d" %(i))
+        for j in range(len(img[i])):
+            
+           # print("j=%d" %(j))
+            
+            # append all numbers of the line
+            bit_string.append(img[i][j])
+            byte_count += 1
+
+        # append end of line command
+       # bit_string.append(0x00)
+        #bit_string.append(0x00)
+        #byte_count += 2
+        
+        
+        #payload.append(sub_payload)
+    #bit_string.append(0x00)   
+    #bit_string.append(0x01)
+    #byte_count += 2
+        
+        
+    return bit_string, byte_count
+
+
+def encode4(img):
+
+    
+    # header creation
+    byte_count = 48
+    bit_string = []
+
+    bit_string.append(0x53)
+    bit_string.append(0x70)
+    bit_string.append(0x6c)
+    bit_string.append(0x64)
+
+    width = convert_num_to_bit_string(1920, 16)
+    width = bits_to_bytes(width)
+    for i in range(len(width)):
+        bit_string.append(width[i])
+
+    height = convert_num_to_bit_string(1080, 16)
+    height = bits_to_bytes(height)
+    for i in range(len(height)):
+        bit_string.append(height[i])
+
+    total = convert_num_to_bit_string(0,32)
+    total = bits_to_bytes(total)
+    for i in range(len(total)):
+        bit_string.append(total[i])
+
+    for i in range(8):
+        bit_string.append(0xff)
+
+    """
+    Setting the background color to black.
+    """
+    for i in range(4):
+        bit_string.append(0x00)
+
+    bit_string.append(0x00)
+    bit_string.append(0x01)
+    bit_string.append(0x01)
+
+    for i in range(21):
+        bit_string.append(0x00)
+        
+    for line in img:
+        prev_number = line[0]
+        count = 0
+
+        for number in line:
+            #print(number)
+            #print(prev_number)
+            # If the prev and current characters
+            # don't match...
+            if number != prev_number:
+                # ...then add the count and character
+                # to our encoding
+                if count > 255:
+                    count = convert_num_to_bit_string(count, 32)
+                    count = bits_to_bytes(count)
+                    for i in range(len(count)):
+                        bit_string.append(count[i])
+                        byte_count += 1
+                else:
+                    bit_string.append(count)
+                    
+                bit_string.append(prev_number)
+                byte_count += 2
+                
+                count = 1
+                prev_number = number
+            else:
+                # Or increment our counter
+                # if the characters do match
+                count += 1
+        else:
+            # Finish off the encoding
+            bit_string.append(count)
+            bit_string.append(prev_number)
+            byte_count += 2
+            
+        # add end of line command
+        for i in range(2):
+            bit_string.append(0)
+            byte_count += 1
+        
+        # add end of line padding
+        for i in range(3):
+            bit_string.append(0)
+            byte_count += 1
+
+    # add end of file command
+    bit_string.append(0)
+    bit_string.append(1)
+    byte_count += 2       
+    
+    # add end of file padding
+    bit_string.append(0)
+    bit_string.append(1)
+    byte_count += 2 
+    for i in range(8):
+        bit_string.append(0)
+        byte_count += 1
+        
+    size = byte_count
+
+    #print(size)
+
+    total = convert_num_to_bit_string(size, 32)
+    total = bits_to_bytes(total)
+    for i in range(len(total)):
+        print(total)
+        bit_string[i + 8] = total[i]
+        
+    return bit_string, byte_count
+
+def encode5(image):
+    
+    # input image is 2d np array
+    
+    # header creation
+    byte_count = 48
+    bit_string = []
+
+    bit_string.append(0x53)
+    bit_string.append(0x70)
+    bit_string.append(0x6c)
+    bit_string.append(0x64)
+
+    width = convert_num_to_bit_string(1920, 16)
+    width = bits_to_bytes(width)
+    for i in range(len(width)):
+        bit_string.append(width[i])
+
+    height = convert_num_to_bit_string(1080, 16)
+    height = bits_to_bytes(height)
+    for i in range(len(height)):
+        bit_string.append(height[i])
+
+    total = convert_num_to_bit_string(0,32)
+    total = bits_to_bytes(total)
+    for i in range(len(total)):
+        bit_string.append(total[i])
+
+    for i in range(8):
+        bit_string.append(0xff)
+
+    """
+    Setting the background color to black.
+    """
+    for i in range(4):
+        bit_string.append(0x00)
+
+    bit_string.append(0x00)
+    
+    # image compression type is set here
+    bit_string.append(0x01)
+    
+    bit_string.append(0x01)
+
+    for i in range(21):
+        bit_string.append(0x00)
+        
+    # set up the variables for the rle encoding
+    
+    encoding = numpy.empty(image.shape[0]*image.shape[1],dtype=numpy.uint8)
+    
+    counter = 0
+    encoding_index = 0
+    
+    for row in numpy.arange(0,image.shape[0]):
+        prev_column = image[row,0]
+        print("\n")
+        
+        #print(row)
+        
+        # from 0 to 1080
+        for column in numpy.arange(0,image.shape[1]):
+           # print(column)
+            # from 0 to 1920
+
+            if (image[row,column]==prev_column).all():
+                counter += 1
+                # stop counter, at 255 repetitions
+                if counter == 255:
+                    encoding[encoding_index] = 255
+                    # add 2 zeros, since two bytes are not used
+                    encoding[encoding_index+1] = 0
+                    encoding[encoding_index+2] = 0
+                    # add the thrid used byte
+                    encoding[encoding_index+3] = image[row,column]
+                    print([counter, 0,0,image[row,column]])
+                    print(encoding_index)
+                    encoding_index += 4
+                    counter = 0
+                    prev_column=image[row,column]
+            
+            else:
+                encoding[encoding_index] = counter
+                #add 2 zeros, since two bytes are not used
+                encoding[encoding_index+1] = 0
+                encoding[encoding_index+2] = 0
+                # add the third byte
+                encoding[encoding_index+3] = image[row,column]
+                print([counter, 0,0,image[row,column]])
+                print(encoding_index)
+                encoding_index += 4
+                counter = 0
+                prev_column=image[row,column]
+            
+        # when the column looop ends
+        else:
+            encoding[encoding_index] = counter
+            #add 2 zeros, since two bytes are not used
+            encoding[encoding_index+1] = 0
+            encoding[encoding_index+2] = 0
+            # add the third byte
+            encoding[encoding_index+3] = image[row,column]
+            print([counter, 0,0,image[row,column]])
+            print(encoding_index)
+            encoding_index += 4
+            counter = 0
+        
+                
+        # add end of line command
+        for i in range(2):
+            encoding[encoding_index+1] = 0
+            encoding_index += 1
+        
+        # add end of line padding
+        for i in range(3):
+            encoding[encoding_index+1] = 0
+            encoding_index += 1
+        """        
+        else:
+            encoding[encoding_index] = counter
+            #add 2 zeros, since two bytes are not used
+            encoding[encoding_index+1] = 0
+            encoding[encoding_index+2] = 0
+            # add the third byte
+            encoding[encoding_index+3] = image[row,column]
+            encoding_index += 4
+        """
+    # add end of file command
+    encoding[encoding_index+1] = 0
+    encoding[encoding_index+2] = 1
+    encoding_index += 2      
+    
+    # add end of file padding
+    encoding[encoding_index+1] = 0
+    encoding[encoding_index+2] = 1
+    encoding_index += 2 
+    for i in range(8):
+        encoding[encoding_index+1] = 0
+        encoding_index += 1
+        
+    # merge byte count with encoding index
+    byte_count += encoding_index
+    
+    encoding = numpy.delete(encoding, numpy.arange(encoding_index,encoding.shape[0]))
+    
+    print(encoding.shape)
+    print(len(encoding.tolist()))
+    #merge encoding with byte string
+    bit_string = bit_string + encoding.tolist()
+    new_bit_string = []
+    
+    for bit in bit_string:
+        new_bit_string.append(bit)
+        
+    return new_bit_string, byte_count
+
+
+def encode6(image):
+    # image must be array of uint8 with size 1080,1920
+    # header creation
+    byte_count = 48
+    bit_string = []
+
+    bit_string.append(0x53)
+    bit_string.append(0x70)
+    bit_string.append(0x6c)
+    bit_string.append(0x64)
+
+    width = convert_num_to_bit_string(1920, 16)
+    width = bits_to_bytes(width)
+    for i in range(len(width)):
+        bit_string.append(width[i])
+
+    height = convert_num_to_bit_string(1080, 16)
+    height = bits_to_bytes(height)
+    for i in range(len(height)):
+        bit_string.append(height[i])
+
+    total = convert_num_to_bit_string(0,32)
+    total = bits_to_bytes(total)
+    for i in range(len(total)):
+        bit_string.append(total[i])
+
+    for i in range(8):
+        bit_string.append(0xff)
+
+    """
+    Setting the background color to black.
+    """
+    for i in range(4):
+        bit_string.append(0x00)
+
+    bit_string.append(0x00)
+    
+    # image compression type is set here
+    bit_string.append(0x01)
+    
+    bit_string.append(0x01)
+
+    for i in range(21):
+        bit_string.append(0x00)
+        
+    # set up the variables for the rle encoding
+    encoded_image, image_byte_count =  encoding_functions.fully_encode_image(image)
+    bit_string = bit_string + encoded_image
+    byte_count += image_byte_count
+    
+    
+    while (byte_count) % 4 != 0:
+        bit_string.append(0x00)
+        byte_count += 1
+    
+    size = byte_count
+    
+    total = convert_num_to_bit_string(size, 32)
+    total = bits_to_bytes(total)
+    for i in range(len(total)):
+        print(total)
+        bit_string[i + 8] = total[i]
+    
+    return bit_string, byte_count
 
 class DMD():
     """
@@ -858,12 +1370,32 @@ class DMD():
         total = convert_num_to_bit_string(size, 32)
         total = bits_to_bytes(total)
         for i in range(len(total)):
+            #print('total=%d' %(total[i]))
             payload.append(total[i])
 
+        #self.usb_command('w', 0x00, 0x1a, 0x2a, payload)
         self.usb_command('w', 0x00, 0x1a, 0x2a, payload)
         self.check_for_errors()
+        
+    def set_bmp2(self,size):
+        payload = []
+        index = convert_num_to_bit_string(1, 5)
+        index = '0' * 11 + index
+        index = bits_to_bytes(index)
+        for i in range(len(index)):
+            payload.append(index[i])
+            
+        total = convert_num_to_bit_string(size, 32)
+        total = bits_to_bytes(total)
+        for i in range(len(total)):
+            print('total=%d' %(total[i]))
+            payload.append(total[i])
+            
+        self.usb_command('w', 0x00, 0x1a, 0x2a, payload)
+        self.check_for_errors()
+        
 
-    def load_bmp(self, image, size, debug=False):
+    def load_bmp(self, image, size, debug=True):
         """
         Upload a .bmp image.
 
@@ -890,11 +1422,21 @@ class DMD():
         #t = time.clock()  # count time
 
         # print("Image Length: %d" % len(image))
-        pack_num = size / 504 + 1
+        
+        #print(len(image))
+        #size += 1
+        
+        size = len(image)
+        pack_num = int(size / 504 + 1)
+        
+        print(size)
+        print(pack_num)
 
         counter = 0
 
-        for i in range(int(pack_num)):
+        for i in range(pack_num):
+            
+            
             if i % 100 == 0:
                 if debug:
                     print(i, pack_num)
@@ -907,6 +1449,7 @@ class DMD():
             else:
                 leng = convert_num_to_bit_string(size % 504, 16)
                 bits = size % 504
+                print(bits)
 
             leng = bits_to_bytes(leng)
 
@@ -914,20 +1457,31 @@ class DMD():
                 payload.append(leng[j])
 
             for j in range(bits):
+                #print(bits)
 
                 """
                 This if statement blocks the index counter if it gets too
                 big.
                 """
-                if counter < len(image):
-                    payload.append(image[counter])
-
-                counter += 1
-                # print("Counter: %d" % counter)
-                # print(j)
                 
+                if counter < len(image):
+                #payload.append(image[counter])
+                    payload.append(image[counter])
+            
+               # payload.append(image[counter])
+                counter += 1
+                #print(counter)
+                #print("Counter: %d" % counter)
+                #print(j)
+            
+                
+            print(payload)
             self.usb_command('w', 0x11, 0x1a, 0x2b, payload)
             self.check_for_errors()
+
+            
+    def load_bmp2(self, image, size):
+        pass
 
     # TODO: remove this one???
     def encoding_merging_image_sequence(self, images):
@@ -1182,7 +1736,7 @@ class DMD():
         """
         # minimum wait time in sec to have enough time for a single image to 
         # be displayed
-        minimum_wait_time = 0.1
+        minimum_wait_time = 0.01
         
         display_time = 0
         wait_time = 0
@@ -1218,24 +1772,34 @@ class DMD():
             self.set_led_pwm(brightness[index])
             #time.sleep(1)
             start_time = time.process_time()*1e6
+            
             display_time = 0
             print('start time: %f' %(start_time))
-            self.start_sequence()
-            #time.sleep(0.01+exposures[index][0])
             
-        
+            self.start_sequence()
+            st = time.clock();
+            #time.sleep(exposures[index][0]/1000000)
+            
+            
             while display_time <= exposures[index][0]:
-                display_time = time.process_time()*1e6 - start_time
-                
+                display_time = (time.clock()-st)*1e6
+                print(display_time)
+                #print((time.clock()-st)*1e6)
+                #display_time = time.process_time()*1e6 - start_time
+            
+                    
             # wait some time, therefore projector can finish displaying the image
             #waiting_time = (exposures[index][0] + dark_times[index][0]) / 1000000
 
             self.set_led_pwm(0)
             self.stop_sequence()
+            
+            
             start_time = time.process_time()*1e6
             
             while wait_time <= dark_times[index][0]:
                 wait_time = time.process_time()*1e6 - start_time
+            
             
             
             print('display time: %f' %(display_time))
@@ -1629,8 +2193,12 @@ class PycrafterGUI():
             self.dlp = DMD()
             # send wakeup to controller
             self.dlp.wake_up()
+            #time.sleep(1)
             # set to idle mode to preserve DMD lifetime
-            self.dlp.idle_on()
+            #self.dlp.idle_on()
+            #set led to 0
+            self.set_led_pwm(0)
+            
             # change to pattern on the fly mode
             self.dlp.change_mode(3)
         except:
@@ -1878,6 +2446,7 @@ class PycrafterGUI():
         self.dlp.idle_on()
         self.dlp.set_led_pwm(0)
         """
+        
     def load_image_sequence_setting(self, debug=False):
         """
         Function to fetch the different parameters for different images from 

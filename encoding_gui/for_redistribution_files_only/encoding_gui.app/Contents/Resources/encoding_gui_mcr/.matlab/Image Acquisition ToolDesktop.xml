@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Layout>
+   <Version Major="3" Minor="1"/>
+   <Frame StatusBarShowing="yes" TitlesShowing="yes">
+      <Location External="yes" Height="680" MaxHeight="817" MaxWidth="1440" Maximized="yes" Type="floating" Width="1152" X="144" Y="90"/>
+      <Split Orientation="topBottom" Position="0.6483">
+         <Split Orientation="leftRight" Position="0.1955">
+            <View Name="Hardware Browser" Title="Hardware Browser"/>
+            <Split Orientation="leftRight" Position="0.7996">
+               <Group Name="Preview" Title="Preview"/>
+               <View Name="Image Acquisition Tool Help" Title="Desktop Help"/>
+            </Split>
+         </Split>
+         <Split Orientation="leftRight" Position="0.1955">
+            <View Name="Information" Title="Information"/>
+            <Split Orientation="leftRight" Position="0.5987">
+               <View Name="Acquisition Parameters" Title="Acquisition Parameters"/>
+               <View Name="Session Log" Title="Session Log"/>
+            </Split>
+         </Split>
+      </Split>
+   </Frame>
+   <Group Alphabetize="no" Dock="yes" Guest="no" Name="Preview" PropertyClass="com.mathworks.toolbox.imaq.browser.PreviewGroup" SelectionOrder="10" Show="yes" ShowViews="no" Title="Preview">
+      <ToolBars>
+         <ToolBar Label="Preview" Showing="yes"/>
+      </ToolBars>
+      <Location Context="docked" Height="524" ParentHeight="524" ParentWidth="1150" Path="NEW" Type="nested" Width="919" X="290" Y="68"/>
+      <Location Context="nested" Height="524" ParentHeight="524" ParentWidth="1150" Path="NEW" Type="nested" Width="919" X="290" Y="68"/>
+      <Location Context="document" Type="floating"/>
+      <DocumentArea Arrangement="maximized" Bar="bottom" Empty="yes" MaxBarWidth="240" Showing="yes" ShrinkTabs="no"/>
+   </Group>
+   <Client Class="com.mathworks.toolbox.imaq.browser.HelpPanel" Dock="yes" Guest="no" Name="Image Acquisition Tool Help" SelectionOrder="3" Show="yes" Singleton="yes" StatusBarShowing="yes" TearOff="no" Title="Desktop Help">
+      <Location Context="docked" Height="524" ParentHeight="524" ParentWidth="1150" Path="NEE" Type="nested" Width="222" X="1218" Y="68"/>
+      <Location Context="nested" Height="524" ParentHeight="524" ParentWidth="1150" Path="NEE" Type="nested" Width="222" X="1218" Y="68"/>
+   </Client>
+   <Client Class="com.mathworks.toolbox.imaq.browser.acquisitionParameters.AcquisitionParametersPanel" Dock="yes" Guest="no" Name="Acquisition Parameters" SelectionOrder="5" Show="yes" Singleton="yes" StatusBarShowing="yes" TearOff="no" Title="Acquisition Parameters">
+      <Location Context="docked" Height="276" ParentHeight="276" ParentWidth="1150" Path="SEW" Type="nested" Width="688" X="290" Y="601"/>
+      <Location Context="nested" Height="276" ParentHeight="276" ParentWidth="1150" Path="SEW" Type="nested" Width="688" X="290" Y="601"/>
+   </Client>
+   <Client Class="com.mathworks.toolbox.imaq.browser.SessionLog" Dock="yes" Guest="no" Name="Session Log" SelectionOrder="2" Show="yes" Singleton="yes" StatusBarShowing="yes" TearOff="no" Title="Session Log">
+      <ToolBars>
+         <ToolBar Label="SessionLogToolbar" Showing="yes"/>
+      </ToolBars>
+      <Location Context="docked" Height="276" ParentHeight="276" ParentWidth="1150" Path="SEE" Type="nested" Width="453" X="987" Y="601"/>
+      <Location Context="nested" Height="276" ParentHeight="276" ParentWidth="1150" Path="SEE" Type="nested" Width="453" X="987" Y="601"/>
+   </Client>
+   <Client Class="com.mathworks.toolbox.imaq.browser.TreeViewPanel" Dock="yes" Guest="no" Name="Hardware Browser" SelectionOrder="4" Show="yes" Singleton="yes" StatusBarShowing="yes" TearOff="no" Title="Hardware Browser">
+      <Location Context="docked" Height="524" ParentHeight="524" ParentWidth="1440" Path="NW" Type="nested" Width="281" Y="68"/>
+      <Location Context="nested" Height="524" ParentHeight="524" ParentWidth="1440" Path="NW" Type="nested" Width="281" Y="68"/>
+   </Client>
+   <Client Class="com.mathworks.toolbox.imaq.browser.HardwareInfoPanel" Dock="yes" Guest="no" Name="Information" SelectionOrder="1" Show="yes" Singleton="yes" StatusBarShowing="yes" TearOff="no" Title="Information">
+      <Location Context="docked" Height="276" ParentHeight="276" ParentWidth="1440" Path="SW" Type="nested" Width="281" Y="601"/>
+      <Location Context="nested" Height="276" ParentHeight="276" ParentWidth="1440" Path="SW" Type="nested" Width="281" Y="601"/>
+   </Client>
+</Layout>

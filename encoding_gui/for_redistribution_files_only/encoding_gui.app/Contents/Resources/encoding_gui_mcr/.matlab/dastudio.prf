@@ -1,0 +1,12 @@
+#
+#DAStudio Preference File
+#
+
+
+[General]
+MatlabRelease=2020a
+
+[SLToolstrip]
+TSDisplay=0
+galleryStates=resultsGalleryPopup|{"categories":["resultsLoggingGalleryCategory"],"displayState":"icon_view","favorites":{"isFavorite":[true,false],"tags":["simDataInspectorGalleryItem","logicAnalyzerGalleryItem"]},"name":"resultsGalleryPopup"}|designDataSimulinkGalleryPopup|{"categories":["simulinkDesignDataRepositoriesCategory","simulinkDesignDataManagementCategory","simulinkDesignSystemDesignCategory"],"displayState":"icon_view","favorites":{"isFavorite":[true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false],"tags":["modelDataEditorGalleryItem","modelExplorerGalleryItem","scheduleEditorGalleryItem","slBaseWorkspaceGalleryItem","slModelWorkspaceGalleryItem","slOpenDataDictionaryGalleryItem","slLinkToDataDictionaryGalleryItem","slFindReferencedVariablesGalleryItem","propertyInspectorGalleryItem","busEditorGalleryItem","lookupTableEditorGalleryItem","dataObjectWizardGalleryItem","modelInterfaceGalleryItem","modelDependenciesGalleryItem","variantManagerGalleryItem","simulationTargetSimulinkGalleryItem","systemDocumentationGalleryItem"]},"name":"designDataSimulinkGalleryPopup"}|
+

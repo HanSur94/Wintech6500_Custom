@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<toolset id="apps_toolset" template="true">
+   <tool id="favorites" quick_access_eligible="false" toolset_id="apps_toolset" type="group">
+      <child_tool id="cftool" toolset_id="curvefit_toolset"/>
+      <child_tool id="modbusExplorer" toolset_id="modbusapplet_toolset"/>
+      <child_tool id="signalAnalyzer" toolset_id="signal_toolset"/>
+      <child_tool id="imaqtool" toolset_id="imaq_toolset"/>
+      <child_tool id="tmtool" toolset_id="instrument_toolset"/>
+      <child_tool id="ccoder" toolset_id="matlabcoder_toolset"/>
+      <child_tool id="applicationCompiler" toolset_id="compiler_toolset"/>
+   </tool>
+   <tool id="code_verify_products" quick_access_eligible="false" toolset_id="apps_toolset" type="group"/>
+   <tool id="simulation_products" quick_access_eligible="false" toolset_id="apps_toolset" type="group"/>
+   <tool id="internal" quick_access_eligible="false" toolset_id="apps_toolset" type="group"/>
+   <tool id="learning_products" quick_access_eligible="false" toolset_id="apps_toolset" type="group">
+      <child_tool id="ml_classification_2" toolset_id="mlearnapp_toolset"/>
+      <child_tool id="ml_regression_2" toolset_id="mlearnapp_toolset"/>
+   </tool>
+   <tool id="my_apps" quick_access_eligible="false" toolset_id="apps_toolset" type="group"/>
+   <tool id="control_products" quick_access_eligible="false" toolset_id="apps_toolset" type="group"/>
+   <tool id="signal_products" quick_access_eligible="false" toolset_id="apps_toolset" type="group">
+      <child_tool id="fdatool" toolset_id="signal_toolset"/>
+      <child_tool id="signalAnalyzer" toolset_id="signal_toolset"/>
+      <child_tool id="signalLabeler" toolset_id="signal_toolset"/>
+      <child_tool id="wintool" toolset_id="signal_toolset"/>
+   </tool>
+   <tool id="verification_products" quick_access_eligible="false" toolset_id="apps_toolset" type="group"/>
+   <tool id="automotive_products" quick_access_eligible="false" toolset_id="apps_toolset" type="group"/>
+   <tool id="deployment_products" quick_access_eligible="false" toolset_id="apps_toolset" type="group">
+      <child_tool id="applicationCompiler" toolset_id="compiler_toolset"/>
+      <child_tool id="hadoopCompiler" toolset_id="compiler_toolset"/>
+      <child_tool id="webApplicationCompiler" toolset_id="compiler_toolset"/>
+   </tool>
+   <tool id="finance_products" quick_access_eligible="false" toolset_id="apps_toolset" type="group"/>
+   <tool id="image_products" quick_access_eligible="false" toolset_id="apps_toolset" type="group">
+      <child_tool id="cameraCalibrator" toolset_id="vision_toolset"/>
+      <child_tool id="colorThresholder" toolset_id="image_toolset"/>
+      <child_tool id="dicomBrowser" toolset_id="image_toolset"/>
+      <child_tool id="imaqtool" toolset_id="imaq_toolset"/>
+      <child_tool id="imageBatchProcessor" toolset_id="image_toolset"/>
+      <child_tool id="imageBrowser" toolset_id="image_toolset"/>
+      <child_tool id="imageLabeler" toolset_id="vision_toolset"/>
+      <child_tool id="imageRegionAnalyzer" toolset_id="image_toolset"/>
+      <child_tool id="imageSegmenter" toolset_id="image_toolset"/>
+      <child_tool id="imtool" toolset_id="image_toolset"/>
+      <child_tool id="ocrTrainer" toolset_id="vision_toolset"/>
+      <child_tool id="registrationEstimator" toolset_id="image_toolset"/>
+      <child_tool id="stereoCameraCalibrator" toolset_id="vision_toolset"/>
+      <child_tool id="videoLabeler" toolset_id="vision_toolset"/>
+      <child_tool id="implay" toolset_id="image_toolset"/>
+      <child_tool id="volumeViewer" toolset_id="image_toolset"/>
+   </tool>
+   <tool id="test_products" quick_access_eligible="false" toolset_id="apps_toolset" type="group">
+      <child_tool id="tmtool" toolset_id="instrument_toolset"/>
+      <child_tool id="modbusExplorer" toolset_id="modbusapplet_toolset"/>
+   </tool>
+   <tool id="math_products" quick_access_eligible="false" toolset_id="apps_toolset" type="group">
+      <child_tool id="cftool" toolset_id="curvefit_toolset"/>
+      <child_tool id="dfittool" toolset_id="stats_toolset"/>
+      <child_tool id="pdetool" toolset_id="pde_toolset"/>
+   </tool>
+   <tool id="code_gen_products" quick_access_eligible="false" toolset_id="apps_toolset" type="group">
+      <child_tool id="ccoder" toolset_id="matlabcoder_toolset"/>
+   </tool>
+   <tool id="database_products" quick_access_eligible="false" toolset_id="apps_toolset" type="group">
+      <child_tool id="databaseExplorer" toolset_id="database_toolset"/>
+   </tool>
+   <tool id="biology_products" quick_access_eligible="false" toolset_id="apps_toolset" type="group"/>
+   <tool id="apps" quick_access_eligible="false" toolset_id="apps_toolset" type="gallery">
+      <child_tool id="favorites" toolset_id="apps_toolset"/>
+      <child_tool id="image_products" toolset_id="apps_toolset"/>
+      <child_tool id="my_apps" toolset_id="apps_toolset"/>
+      <child_tool id="learning_products" toolset_id="apps_toolset"/>
+      <child_tool id="math_products" toolset_id="apps_toolset"/>
+      <child_tool id="control_products" toolset_id="apps_toolset"/>
+      <child_tool id="automotive_products" toolset_id="apps_toolset"/>
+      <child_tool id="signal_products" toolset_id="apps_toolset"/>
+      <child_tool id="test_products" toolset_id="apps_toolset"/>
+      <child_tool id="finance_products" toolset_id="apps_toolset"/>
+      <child_tool id="biology_products" toolset_id="apps_toolset"/>
+      <child_tool id="code_gen_products" toolset_id="apps_toolset"/>
+      <child_tool id="code_verify_products" toolset_id="apps_toolset"/>
+      <child_tool id="database_products" toolset_id="apps_toolset"/>
+      <child_tool id="verification_products" toolset_id="apps_toolset"/>
+      <child_tool id="simulation_products" toolset_id="apps_toolset"/>
+      <child_tool id="internal" toolset_id="apps_toolset"/>
+      <child_tool id="deployment_products" toolset_id="apps_toolset"/>
+   </tool>
+   <toolset id="database_toolset" template="true">
+      <tool id="databaseExplorer" toolset_id="database_toolset"/>
+   </toolset>
+   <toolset id="pde_toolset" template="true">
+      <tool id="pdetool" toolset_id="pde_toolset"/>
+   </toolset>
+   <toolset id="curvefit_toolset" template="true">
+      <tool id="cftool" toolset_id="curvefit_toolset"/>
+   </toolset>
+   <toolset id="instrument_toolset" template="true">
+      <tool id="tmtool" toolset_id="instrument_toolset"/>
+   </toolset>
+   <toolset id="stats_toolset" template="true">
+      <tool id="dfittool" toolset_id="stats_toolset"/>
+   </toolset>
+   <toolset id="modbusapplet_toolset" template="true">
+      <tool id="modbusExplorer" toolset_id="modbusapplet_toolset"/>
+   </toolset>
+   <toolset id="mlearnapp_toolset" template="true">
+      <tool id="ml_regression_2" toolset_id="mlearnapp_toolset"/>
+      <tool id="ml_classification_2" toolset_id="mlearnapp_toolset"/>
+   </toolset>
+   <toolset id="matlabcoder_toolset" template="true">
+      <tool id="ccoder" toolset_id="matlabcoder_toolset"/>
+   </toolset>
+   <toolset id="image_toolset" template="true">
+      <tool id="dicomBrowser" toolset_id="image_toolset"/>
+      <tool id="volumeViewer" toolset_id="image_toolset"/>
+      <tool id="colorThresholder" toolset_id="image_toolset"/>
+      <tool id="implay" toolset_id="image_toolset"/>
+      <tool id="imageBrowser" toolset_id="image_toolset"/>
+      <tool id="imageBatchProcessor" toolset_id="image_toolset"/>
+      <tool id="registrationEstimator" toolset_id="image_toolset"/>
+      <tool id="imageRegionAnalyzer" toolset_id="image_toolset"/>
+      <tool id="imageSegmenter" toolset_id="image_toolset"/>
+      <tool id="imtool" toolset_id="image_toolset"/>
+   </toolset>
+   <toolset id="signal_toolset" template="true">
+      <tool id="wintool" toolset_id="signal_toolset"/>
+      <tool id="signalAnalyzer" toolset_id="signal_toolset"/>
+      <tool id="signalLabeler" toolset_id="signal_toolset"/>
+      <tool id="fdatool" toolset_id="signal_toolset"/>
+   </toolset>
+   <toolset id="vision_toolset" template="true">
+      <tool id="videoLabeler" toolset_id="vision_toolset"/>
+      <tool id="imageLabeler" toolset_id="vision_toolset"/>
+      <tool id="cameraCalibrator" toolset_id="vision_toolset"/>
+      <tool id="ocrTrainer" toolset_id="vision_toolset"/>
+      <tool id="stereoCameraCalibrator" toolset_id="vision_toolset"/>
+   </toolset>
+   <toolset id="imaq_toolset" template="true">
+      <tool id="imaqtool" toolset_id="imaq_toolset"/>
+   </toolset>
+   <toolset id="compiler_toolset" template="true">
+      <tool id="hadoopCompiler" toolset_id="compiler_toolset"/>
+      <tool id="webApplicationCompiler" toolset_id="compiler_toolset"/>
+      <tool id="applicationCompiler" toolset_id="compiler_toolset"/>
+   </toolset>
+</toolset>

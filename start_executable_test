@@ -1,0 +1,19 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Sun Jun  7 12:42:28 2020
+
+@author: hannessuhr
+"""
+
+
+import os
+import subprocess
+
+#print(os.system('encoding_gui.app'))
+#subprocess.call('./encoding_gui.app')
+
+
+
+# this works well!!!
+os.system('open ./encoding_gui.app')

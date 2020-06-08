@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Layout>
+   <Version Major="3" Minor="0"/>
+   <Frame StatusBarShowing="yes" TitlesShowing="yes">
+      <ToolBars>
+         <ToolBar Label="Toolbar" Showing="yes"/>
+      </ToolBars>
+      <Location External="yes" Height="680" MaxHeight="817" MaxWidth="1440" Maximized="yes" Type="floating" Width="1152" X="144" Y="90"/>
+      <Split Orientation="leftRight" Position="0.1865">
+         <View Name="Instrument Browser" Title="Test &amp; Measurement"/>
+         <Split Orientation="leftRight" Position="0.764">
+            <View Name="Instrument Detail View" Title="Instrument Control Toolbox"/>
+            <View Name="Help" Title="Help"/>
+         </Split>
+      </Split>
+   </Frame>
+   <Client Class="com.mathworks.toolbox.instrument.browser.ICTDetailviewPanel" Dock="yes" Guest="no" Name="Instrument Detail View" SelectionOrder="2" Show="yes" Singleton="yes" StatusBarShowing="yes" TearOff="no" Title="Instrument Control Toolbox">
+      <Location Context="docked" Height="787" ParentHeight="787" ParentWidth="1163" Path="EW" Type="nested" Width="888" X="277" Y="90"/>
+      <Location Context="nested" Height="787" ParentHeight="787" ParentWidth="1163" Path="EW" Type="nested" Width="888" X="277" Y="90"/>
+   </Client>
+   <Client Class="com.mathworks.toolbox.instrument.browser.ICTTreeviewPanel" Dock="yes" Guest="no" Name="Instrument Browser" SelectionOrder="3" Show="yes" Singleton="yes" StatusBarShowing="yes" TearOff="no" Title="Test &amp; Measurement">
+      <Location Context="docked" Height="787" ParentHeight="787" ParentWidth="1440" Path="W" Type="nested" Width="268" Y="90"/>
+      <Location Context="nested" Height="787" ParentHeight="787" ParentWidth="1440" Path="W" Type="nested" Width="268" Y="90"/>
+   </Client>
+   <Client Class="com.mathworks.toolbox.instrument.browser.HelpPanel" Dock="yes" Guest="no" Name="Help" SelectionOrder="1" Show="yes" Singleton="yes" StatusBarShowing="yes" TearOff="no" Title="Help">
+      <Location Context="docked" Height="787" ParentHeight="787" ParentWidth="1163" Path="EE" Type="nested" Width="266" X="1174" Y="90"/>
+      <Location Context="nested" Height="787" ParentHeight="787" ParentWidth="1163" Path="EE" Type="nested" Width="266" X="1174" Y="90"/>
+   </Client>
+</Layout>

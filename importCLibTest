@@ -1,0 +1,30 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Sat Jun  6 17:18:34 2020
+
+@author: hannessuhr
+"""
+
+
+import ctypes 
+NUM = 16      
+# libfun loaded to the python file 
+# using fun.myFunction(), 
+# C function can be accessed 
+# but type of argument is the problem. 
+a = ctypes.LibraryLoader(dlltype='CDLL').LoadLibrary('libformatrep.dylib')                         
+#fun = ctypes.CDLL('./libformatrep.dylib') # Or full path to file   
+# Now whenever argument  
+# will be passed to the function                                                         
+# ctypes will check it. 
+            
+#fun.myFunction.argtypes = [ctypes.c_int] 
+
+  
+# now we can call this  
+# function using instant (fun) 
+# returnValue is the value  
+# return by function written in C  
+# code 
+#returnVale = fun.myFunction(NUM)
