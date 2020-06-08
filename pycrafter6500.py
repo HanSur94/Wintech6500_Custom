@@ -1293,6 +1293,7 @@ class DMD():
         None.
 
         """
+        print('def pattern')
         payload = []
         index = convert_num_to_bit_string(index, 16)
         index = bits_to_bytes(index)
@@ -1475,7 +1476,7 @@ class DMD():
                 #print(j)
             
                 
-            print(payload)
+            #print(payload)
             self.usb_command('w', 0x11, 0x1a, 0x2b, payload)
             self.check_for_errors()
 
@@ -2186,8 +2187,7 @@ class PycrafterGUI():
         None.
 
         """
-        
-    
+        """
         try:
             # create a DMD class object
             self.dlp = DMD()
@@ -2203,7 +2203,7 @@ class PycrafterGUI():
             self.dlp.change_mode(3)
         except:
             print('No usb connection to projector at start up.')
-      
+        """
         
         # the parameters for the imagae sequences
         self.image_file_name_list = []
