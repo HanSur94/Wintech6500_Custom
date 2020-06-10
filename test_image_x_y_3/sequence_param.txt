@@ -1,6 +1,6 @@
 # name; index; brightness; exposure; dark_time; trigger_in; trigger_out;
-test_image_x_y_20.bmp; 1; 255; 3000000; 1000000; 0; 1;
-test_image_x_y_21.bmp; 2; 50; 3000000; 1000000; 0; 1;
-test_image_x_y_22.bmp; 3; 255; 3000000; 1000000; 0; 1;
-test_image_x_y_23.bmp; 4; 50; 3000000; 1000000; 0; 1;
-testimage.bmp; 5; 255; 3000000; 1000000; 0; 1;
+test_image_x_y_20.bmp; 3; 255; 3000000; 1000000; 0; 1;
+test_image_x_y_21.bmp; 1; 50; 3000000; 1000000; 0; 1;
+test_image_x_y_22.bmp; 6; 255; 3000000; 1000000; 0; 1;
+test_image_x_y_23.bmp; 7; 50; 3000000; 1000000; 0; 1;
+testimage.bmp; 99; 255; 3000000; 1000000; 0; 1;

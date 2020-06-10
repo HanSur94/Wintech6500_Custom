@@ -1024,9 +1024,6 @@ class DMD():
     def show_image_sequence_3(self, encoding, brightness, exposures, dark_times,
                               trigger_ins, trigger_outs, debug=False):
         
-        
-        
-        
         # stop any already existing sequence
         self.stop_sequence()
         self.set_led_pwm(0)
@@ -1070,8 +1067,6 @@ class DMD():
             
             while display_time <= exposures[index]:
                 display_time = (time.clock()-st)*1e6
-                #print(display_time)
-
 
             self.set_led_pwm(0)
             self.stop_sequence()
@@ -1703,6 +1698,15 @@ class PycrafterGUI():
         # now we can sort sequence_data according to the index of the images
         self.sequence_data.sort(reverse=False, key=sort_index)
         
+        # convert some data which is still a string to int 
+        for index,image_data in enumerate(self.sequence_data):
+            self.sequence_data[index][1] = int(image_data[1])
+            self.sequence_data[index][2]  = int(image_data[2])
+            self.sequence_data[index][3]  = int(image_data[3])
+            self.sequence_data[index][4]  = int(image_data[4])
+            self.sequence_data[index][5]  = int(image_data[5])
+            self.sequence_data[index][6]  = int(image_data[6])
+        
         encoded_raw = []
         filtered_line= []
         
@@ -1710,7 +1714,7 @@ class PycrafterGUI():
         
         print(self.is_data_loaded)
         print(self.is_matlab_encoded)
-
+        
     def encode_matlab(self):
         #works for mac
         #os.system('open ./encoding_gui.exe')
@@ -1822,6 +1826,7 @@ class PycrafterGUI():
         
             # convert the sequence data in a format for the dlp
             for image_data in self.sequence_data:
+                print(image_data)
                 
                 brightness.append(image_data[2])
                 exposures.append(image_data[3])
@@ -1830,9 +1835,15 @@ class PycrafterGUI():
                 trigger_outs.append(image_data[6])
                 image.append(image_data[7])
                 encoded.append(image_data[8])
+                
+            print(brightness)
+            print(exposures)
+            print(dark_times)
+            print(trigger_ins)
+            print(trigger_outs)
+            #print(encoded)
 
             self.dlp.show_image_sequence_3(encoded, brightness, 
-                                 exposures,  dark_times, trigger_ins,
-                                 trigger_outs, True) 
+                                 exposures,  dark_times,        trigger_ins,trigger_outs, True) 
         
 GUI = PycrafterGUI()
