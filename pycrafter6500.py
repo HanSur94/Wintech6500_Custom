@@ -377,523 +377,6 @@ def encode(image):
 
     return bit_string, byte_count
 
-
-
-def encode7(image):
-    """
-    Encode a image into a bit string.
-
-    Parameters
-    ----------
-    image : numpy array
-        Image represented as an numpy array. Bit depth is 8.
-
-    Returns
-    -------
-    bit_string : str
-        Is the encoded image represented as bits.
-    byte_count : int
-        Is the number of bytes from the bit string.
-
-    """
-    #upload_time = time.process_time()
-    
-    # header creation
-    byte_count = 48
-    bit_string = []
-
-    bit_string.append(0x53)
-    bit_string.append(0x70)
-    bit_string.append(0x6c)
-    bit_string.append(0x64)
-
-    width = convert_num_to_bit_string(1920, 16)
-    width = bits_to_bytes(width)
-    for i in range(len(width)):
-        bit_string.append(width[i])
-
-    height = convert_num_to_bit_string(1080, 16)
-    height = bits_to_bytes(height)
-    for i in range(len(height)):
-        bit_string.append(height[i])
-
-    total = convert_num_to_bit_string(0, 32)
-    total = bits_to_bytes(total)
-    for i in range(len(total)):
-        bit_string.append(total[i])
-
-    for i in range(8):
-        bit_string.append(0xff)
-
-    """
-    Setting the background color to black.
-    """
-    for i in range(4):
-        bit_string.append(0x00)
-
-    bit_string.append(0x00)
-
-    """
-    Enhanced run length encoding
-    To achieve higher compression ratios, this compression format takes
-    advantage of the similarities from line-to-line and uses one or two
-    bytes to encode the length.
-    """
-    bit_string.append(0x02)
-
-    bit_string.append(0x01)
-
-    for i in range(21):
-        bit_string.append(0x00)
-
-    n = 0
-    i = 0
-    j = 0
-
-    while i < 1080:
-        while j < 1919:
-            if numpy.all(image[i, j, :] == image[i, j+1, :]):
-                print(image[i,j,:])
-                print(image[i,j+1,:])
-            j += 1
-            
-        i += 1
-        j = 0
-        #print(i)
- 
-
-    size = byte_count
-
-    #print(size)
-
-    total = convert_num_to_bit_string(size, 32)
-    total = bits_to_bytes(total)
-    for i in range(len(total)):
-        print(total)
-        bit_string[i + 8] = total[i]
-        
-        
-    #upload_time = time.process_time() - upload_time
-    #print('encoding time [s]: %f' % upload_time)
-
-    return bit_string, byte_count
-
-
-def encode2(orgimg, img1):
-
-     payload = RLE.encodeImage(orgimg, img1.size[0], img1.size[1], img1.mode)   
-     return payload
- 
-def encode3(img):
-    #bit_string = []
-    
-    # header creation
-    byte_count = 48
-    bit_string = []
-
-    bit_string.append(0x53)
-    bit_string.append(0x70)
-    bit_string.append(0x6c)
-    bit_string.append(0x64)
-
-    width = convert_num_to_bit_string(1920, 16)
-    width = bits_to_bytes(width)
-    for i in range(len(width)):
-        bit_string.append(width[i])
-
-    height = convert_num_to_bit_string(1080, 16)
-    height = bits_to_bytes(height)
-    for i in range(len(height)):
-        bit_string.append(height[i])
-
-    total = convert_num_to_bit_string(1080*1920+48,32)
-    total = bits_to_bytes(total)
-    for i in range(len(total)):
-        bit_string.append(total[i])
-
-    for i in range(8):
-        bit_string.append(0xff)
-
-    """
-    Setting the background color to black.
-    """
-    for i in range(4):
-        bit_string.append(0x00)
-
-    bit_string.append(0x00)
-    
-    """
-    Uncompressed data
-    """
-    bit_string.append(0x00)
-    bit_string.append(0x01)
-
-    for i in range(21):
-        bit_string.append(0x00)
-    
-    
-    for i in range(len(img)):
-        #sub_payload = []
-        #print("i=%d" %(i))
-        for j in range(len(img[i])):
-            
-           # print("j=%d" %(j))
-            
-            # append all numbers of the line
-            bit_string.append(img[i][j])
-            byte_count += 1
-
-        # append end of line command
-       # bit_string.append(0x00)
-        #bit_string.append(0x00)
-        #byte_count += 2
-        
-        
-        #payload.append(sub_payload)
-    #bit_string.append(0x00)   
-    #bit_string.append(0x01)
-    #byte_count += 2
-        
-        
-    return bit_string, byte_count
-
-
-def encode4(img):
-
-    
-    # header creation
-    byte_count = 48
-    bit_string = []
-
-    bit_string.append(0x53)
-    bit_string.append(0x70)
-    bit_string.append(0x6c)
-    bit_string.append(0x64)
-
-    width = convert_num_to_bit_string(1920, 16)
-    width = bits_to_bytes(width)
-    for i in range(len(width)):
-        bit_string.append(width[i])
-
-    height = convert_num_to_bit_string(1080, 16)
-    height = bits_to_bytes(height)
-    for i in range(len(height)):
-        bit_string.append(height[i])
-
-    total = convert_num_to_bit_string(0,32)
-    total = bits_to_bytes(total)
-    for i in range(len(total)):
-        bit_string.append(total[i])
-
-    for i in range(8):
-        bit_string.append(0xff)
-
-    """
-    Setting the background color to black.
-    """
-    for i in range(4):
-        bit_string.append(0x00)
-
-    bit_string.append(0x00)
-    bit_string.append(0x01)
-    bit_string.append(0x01)
-
-    for i in range(21):
-        bit_string.append(0x00)
-        
-    for line in img:
-        prev_number = line[0]
-        count = 0
-
-        for number in line:
-            #print(number)
-            #print(prev_number)
-            # If the prev and current characters
-            # don't match...
-            if number != prev_number:
-                # ...then add the count and character
-                # to our encoding
-                if count > 255:
-                    count = convert_num_to_bit_string(count, 32)
-                    count = bits_to_bytes(count)
-                    for i in range(len(count)):
-                        bit_string.append(count[i])
-                        byte_count += 1
-                else:
-                    bit_string.append(count)
-                    
-                bit_string.append(prev_number)
-                byte_count += 2
-                
-                count = 1
-                prev_number = number
-            else:
-                # Or increment our counter
-                # if the characters do match
-                count += 1
-        else:
-            # Finish off the encoding
-            bit_string.append(count)
-            bit_string.append(prev_number)
-            byte_count += 2
-            
-        # add end of line command
-        for i in range(2):
-            bit_string.append(0)
-            byte_count += 1
-        
-        # add end of line padding
-        for i in range(3):
-            bit_string.append(0)
-            byte_count += 1
-
-    # add end of file command
-    bit_string.append(0)
-    bit_string.append(1)
-    byte_count += 2       
-    
-    # add end of file padding
-    bit_string.append(0)
-    bit_string.append(1)
-    byte_count += 2 
-    for i in range(8):
-        bit_string.append(0)
-        byte_count += 1
-        
-    size = byte_count
-
-    #print(size)
-
-    total = convert_num_to_bit_string(size, 32)
-    total = bits_to_bytes(total)
-    for i in range(len(total)):
-        print(total)
-        bit_string[i + 8] = total[i]
-        
-    return bit_string, byte_count
-
-def encode5(image):
-    
-    # input image is 2d np array
-    
-    # header creation
-    byte_count = 48
-    bit_string = []
-
-    bit_string.append(0x53)
-    bit_string.append(0x70)
-    bit_string.append(0x6c)
-    bit_string.append(0x64)
-
-    width = convert_num_to_bit_string(1920, 16)
-    width = bits_to_bytes(width)
-    for i in range(len(width)):
-        bit_string.append(width[i])
-
-    height = convert_num_to_bit_string(1080, 16)
-    height = bits_to_bytes(height)
-    for i in range(len(height)):
-        bit_string.append(height[i])
-
-    total = convert_num_to_bit_string(0,32)
-    total = bits_to_bytes(total)
-    for i in range(len(total)):
-        bit_string.append(total[i])
-
-    for i in range(8):
-        bit_string.append(0xff)
-
-    """
-    Setting the background color to black.
-    """
-    for i in range(4):
-        bit_string.append(0x00)
-
-    bit_string.append(0x00)
-    
-    # image compression type is set here
-    bit_string.append(0x01)
-    
-    bit_string.append(0x01)
-
-    for i in range(21):
-        bit_string.append(0x00)
-        
-    # set up the variables for the rle encoding
-    
-    encoding = numpy.empty(image.shape[0]*image.shape[1],dtype=numpy.uint8)
-    
-    counter = 0
-    encoding_index = 0
-    
-    for row in numpy.arange(0,image.shape[0]):
-        prev_column = image[row,0]
-        print("\n")
-        
-        #print(row)
-        
-        # from 0 to 1080
-        for column in numpy.arange(0,image.shape[1]):
-           # print(column)
-            # from 0 to 1920
-
-            if (image[row,column]==prev_column).all():
-                counter += 1
-                # stop counter, at 255 repetitions
-                if counter == 255:
-                    encoding[encoding_index] = 255
-                    # add 2 zeros, since two bytes are not used
-                    encoding[encoding_index+1] = 0
-                    encoding[encoding_index+2] = 0
-                    # add the thrid used byte
-                    encoding[encoding_index+3] = image[row,column]
-                    print([counter, 0,0,image[row,column]])
-                    print(encoding_index)
-                    encoding_index += 4
-                    counter = 0
-                    prev_column=image[row,column]
-            
-            else:
-                encoding[encoding_index] = counter
-                #add 2 zeros, since two bytes are not used
-                encoding[encoding_index+1] = 0
-                encoding[encoding_index+2] = 0
-                # add the third byte
-                encoding[encoding_index+3] = image[row,column]
-                print([counter, 0,0,image[row,column]])
-                print(encoding_index)
-                encoding_index += 4
-                counter = 0
-                prev_column=image[row,column]
-            
-        # when the column looop ends
-        else:
-            encoding[encoding_index] = counter
-            #add 2 zeros, since two bytes are not used
-            encoding[encoding_index+1] = 0
-            encoding[encoding_index+2] = 0
-            # add the third byte
-            encoding[encoding_index+3] = image[row,column]
-            print([counter, 0,0,image[row,column]])
-            print(encoding_index)
-            encoding_index += 4
-            counter = 0
-        
-                
-        # add end of line command
-        for i in range(2):
-            encoding[encoding_index+1] = 0
-            encoding_index += 1
-        
-        # add end of line padding
-        for i in range(3):
-            encoding[encoding_index+1] = 0
-            encoding_index += 1
-        """        
-        else:
-            encoding[encoding_index] = counter
-            #add 2 zeros, since two bytes are not used
-            encoding[encoding_index+1] = 0
-            encoding[encoding_index+2] = 0
-            # add the third byte
-            encoding[encoding_index+3] = image[row,column]
-            encoding_index += 4
-        """
-    # add end of file command
-    encoding[encoding_index+1] = 0
-    encoding[encoding_index+2] = 1
-    encoding_index += 2      
-    
-    # add end of file padding
-    encoding[encoding_index+1] = 0
-    encoding[encoding_index+2] = 1
-    encoding_index += 2 
-    for i in range(8):
-        encoding[encoding_index+1] = 0
-        encoding_index += 1
-        
-    # merge byte count with encoding index
-    byte_count += encoding_index
-    
-    encoding = numpy.delete(encoding, numpy.arange(encoding_index,encoding.shape[0]))
-    
-    print(encoding.shape)
-    print(len(encoding.tolist()))
-    #merge encoding with byte string
-    bit_string = bit_string + encoding.tolist()
-    new_bit_string = []
-    
-    for bit in bit_string:
-        new_bit_string.append(bit)
-        
-    return new_bit_string, byte_count
-
-
-def encode6(image):
-    # image must be array of uint8 with size 1080,1920
-    # header creation
-    byte_count = 48
-    bit_string = []
-
-    bit_string.append(0x53)
-    bit_string.append(0x70)
-    bit_string.append(0x6c)
-    bit_string.append(0x64)
-
-    width = convert_num_to_bit_string(1920, 16)
-    width = bits_to_bytes(width)
-    for i in range(len(width)):
-        bit_string.append(width[i])
-
-    height = convert_num_to_bit_string(1080, 16)
-    height = bits_to_bytes(height)
-    for i in range(len(height)):
-        bit_string.append(height[i])
-
-    total = convert_num_to_bit_string(0,32)
-    total = bits_to_bytes(total)
-    for i in range(len(total)):
-        bit_string.append(total[i])
-
-    for i in range(8):
-        bit_string.append(0xff)
-
-    """
-    Setting the background color to black.
-    """
-    for i in range(4):
-        bit_string.append(0x00)
-
-    bit_string.append(0x00)
-    
-    # image compression type is set here
-    bit_string.append(0x01)
-    
-    bit_string.append(0x01)
-
-    for i in range(21):
-        bit_string.append(0x00)
-        
-    # set up the variables for the rle encoding
-    encoded_image, image_byte_count =  encoding_functions.fully_encode_image(image)
-    bit_string = bit_string + encoded_image
-    byte_count += image_byte_count
-    
-    
-    while (byte_count) % 4 != 0:
-        bit_string.append(0x00)
-        byte_count += 1
-    
-    size = byte_count
-    
-    total = convert_num_to_bit_string(size, 32)
-    total = bits_to_bytes(total)
-    for i in range(len(total)):
-        print(total)
-        bit_string[i + 8] = total[i]
-    
-    return bit_string, byte_count
-
 class DMD():
     """
     DMD controller Class.
@@ -1254,7 +737,6 @@ class DMD():
         string = repeat + '00000' + img
 
         bytes = bits_to_bytes(string)
-        print(bytes)
 
         self.usb_command('w', 0x00, 0x1a, 0x31, bytes)
         self.check_for_errors()
@@ -1377,24 +859,6 @@ class DMD():
         #self.usb_command('w', 0x00, 0x1a, 0x2a, payload)
         self.usb_command('w', 0x00, 0x1a, 0x2a, payload)
         self.check_for_errors()
-        
-    def set_bmp2(self,size):
-        payload = []
-        index = convert_num_to_bit_string(1, 5)
-        index = '0' * 11 + index
-        index = bits_to_bytes(index)
-        for i in range(len(index)):
-            payload.append(index[i])
-            
-        total = convert_num_to_bit_string(size, 32)
-        total = bits_to_bytes(total)
-        for i in range(len(total)):
-            print('total=%d' %(total[i]))
-            payload.append(total[i])
-            
-        self.usb_command('w', 0x00, 0x1a, 0x2a, payload)
-        self.check_for_errors()
-        
 
     def load_bmp(self, image, size, debug=True):
         """
@@ -1430,8 +894,8 @@ class DMD():
         size = len(image)
         pack_num = int(size / 504 + 1)
         
-        print(size)
-        print(pack_num)
+        #print(size)
+        #print(pack_num)
 
         counter = 0
 
@@ -1450,7 +914,6 @@ class DMD():
             else:
                 leng = convert_num_to_bit_string(size % 504, 16)
                 bits = size % 504
-                print(bits)
 
             leng = bits_to_bytes(leng)
 
@@ -1458,7 +921,6 @@ class DMD():
                 payload.append(leng[j])
 
             for j in range(bits):
-                #print(bits)
 
                 """
                 This if statement blocks the index counter if it gets too
@@ -1466,154 +928,13 @@ class DMD():
                 """
                 
                 if counter < len(image):
-                #payload.append(image[counter])
                     payload.append(image[counter])
-            
-               # payload.append(image[counter])
+
                 counter += 1
-                #print(counter)
-                #print("Counter: %d" % counter)
-                #print(j)
-            
-                
-            #print(payload)
+
             self.usb_command('w', 0x11, 0x1a, 0x2b, payload)
             self.check_for_errors()
 
-            
-    def load_bmp2(self, image, size):
-        pass
-
-    # TODO: remove this one???
-    def encoding_merging_image_sequence(self, images):
-        
-        self.encoded_images_list = []
-        self.size_list = []
-        self.num_list = []
-        self.i_list = []
-        self.pattern_payload_list = []
-        
-        for image in images:
-            
-            encoded_image, size, num, i =  self.encoding_merging_image(image)
-            self.encoded_images_list.append(encoded_image)
-            self.size_list.append(size)
-            self.num_list.append(num)
-            self.i_list.append(i)
-            
-    def encoding_merging_image(self, images, exposure, trigger_in, dark_time,
-                        trigger_out, repetition_number, debug=False):
-        """
-        This function merges, encodes an image and defines and uploads the
-        image sequence based on the given parameters.
-
-        Parameters
-        ----------
-         images : list list numpy array
-            A List containing list's each containing a single image 
-            represented by a numpy array.
-        exposure : list of list's of int
-            A List of list's of each containing 30 entries with the same 
-            value. Couldn't find a explanation for this data structure.
-        dark_time : list list int
-            List of list's each containing 30 entries with the same 
-            value. Couldn't find a explanation for this data structure.
-        trigger_in : list list bool
-            List of list's each containing if a trigger in signal is 
-            used or not represented as an boolean.
-        trigger_out : list of list's of bool
-            List of list's each containing if a trigger out signal is 
-            used or not represented as an boolean.
-        repetition_number: int
-            Number of repetitions for a defined image sequence and should be
-            set to 1 in this function.
-        debug : boolean, optional
-           If True, than debug messages will be displayed in the console.
-           The default is False.    
-
-        Returns
-        -------
-        None.
-
-        """
-        # stooping a previous sequence
-        self.stop_sequence()
-        arr = []
-        for i in images:
-            arr.append(i)  
-            #arr.append(numpy.ones((1080,1920),dtype='uint8'))
-
-        num = len(arr)
-        encoded_images = []
-        sizes = []
-
-        for i in range(int((num - 1) / 24 + 1)):
-            if debug:
-                print('merging...')
-
-            if i < ((num - 1) / 24):
-                image_data = merge_images(arr[i * 24:(i + 1) * 24])
-            else:
-                image_data = merge_images(arr[i * 24:])
-            
-            if debug:
-                print('encoding...')
-                
-            image_data, size = encode(image_data)
-            encoded_images.append(image_data)
-            sizes.append(size)
-            
-            # append enoded image data to a list for later uploading process
-            self.encoded_images_list.append(encoded_images)
-            self.sizes_list.append(sizes)
-
-            # here we define the pattern for the image
-            if i < ((num - 1) / 24):
-                for j in range(i * 24, (i + 1) * 24):
-                    self.define_pattern(j, exposure[j], 8, '100',
-                                        trigger_in[j], dark_time[j],
-                                        trigger_out[j], i, j - i * 24)
-            else:
-                for j in range(i * 24, num):
-                    self.define_pattern(j, exposure[j], 8, '100',
-                                        trigger_in[j], dark_time[j],
-                                        trigger_out[j], i, j - i * 24)
-                    
-        # configure the look up table of the DLP900
-        self.configure_lut(num, repetition_number)
-        
-    def upload_image(self, images, encoded_images, sizes):
-        
-        upload_time = time.process_time()
-        self.stop_sequence()
-        arr = []
-        
-        for i in images:
-            arr.append(i)  
-            #arr.append(numpy.ones((1080,1920),dtype='uint8'))
-
-        num = len(arr)
-        
-        for i in range(int((num - 1) / 24 + 1)):
-            
-            self.set_bmp(int((num - 1) / 24 - i),
-                         sizes[int((num - 1) / 24 - i)])
-
-            print('\nuploading...')
-
-            """
-            Seems like that the size index is too big. This results
-            in a error in the bmpload() function.
-            A if statement in the bmpload() function was implemented.
-            This if statement blocks index, that is too long!
-            """
-
-            self.load_bmp(encoded_images[int((num - 1) / 24 - i)],
-                          sizes[int((num - 1) / 24 - i)])
-        
-        # show always the upload time
-        upload_time = time.process_time() - upload_time
-        print('\nupload time [s]: %f' % upload_time)
 
     def define_sequence(self, images, exposure, trigger_in, dark_time,
                         trigger_out, repetition_number):
@@ -1700,214 +1021,84 @@ class DMD():
             self.load_bmp(encoded_images[int((num - 1) / 24 - i)],
                           sizes[int((num - 1) / 24 - i)])
             
-    def show_image_sequence_2(self, images, brightness, exposures, dark_times,
-                            trigger_ins,  trigger_outs, debug=False):
-        """
-        Defines and start's a sequence of always a single image from a list of
-        images.
-
-        Parameters
-        ----------
-        images : list list numpy array
-            A List containing list's each containing a single image 
-            represented by a numpy array.
-        brightness : list int
-            A List containing the brightness value as the blue LED PWM current,
-            for each picture. Must have the same length like images.
-        exposure : list of list's of int
-            A List of list's of each containing 30 entries with the same 
-            value. Couldn't find a explanation for this data structure.
-        dark_time : list list int
-            List of list's each containing 30 entries with the same 
-            value. Couldn't find a explanation for this data structure.
-        trigger_in : list list bool
-            List of list's each containing if a trigger in signal is 
-            used or not represented as an boolean.
-        trigger_out : list of list's of bool
-            List of list's each containing if a trigger out signal is 
-            used or not represented as an boolean.
-        debug : boolean, optional
-           If True, than debug messages will be displayed in the console.
-           The default is False. 
-
-        Returns
-        -------
-        None.
-
-        """
-        # minimum wait time in sec to have enough time for a single image to 
-        # be displayed
-        minimum_wait_time = 0.01
+    def show_image_sequence_3(self, encoding, brightness, exposures, dark_times,
+                              trigger_ins, trigger_outs, debug=False):
         
-        display_time = 0
-        wait_time = 0
+        
+        
         
         # stop any already existing sequence
         self.stop_sequence()
         self.set_led_pwm(0)
         self.idle_off()
+        self.change_mode(3)
         
-        for index, image in enumerate(images):
+        for index, enc in enumerate(encoding):
+            
+            for j in range(0,2,1):
+                self.define_pattern(index, exposures[index], 8, '100',
+                                        trigger_ins[index], dark_times[index],
+                                        trigger_outs[index], j, j)
+                
+        
+        for index, enc in enumerate(encoding):
+            
+            display_time = 0
+            wait_time = 0
             
             if debug:
                 print("- DEBUG PARAMETERS -")
                 print("\n image Index %d " % index)
                 print('\n current image settings:')
                 print('\n brightness: %d' % brightness[index])
-                print('\n exposure [us]: %d' % exposures[index][0] )
-                print('\n dark time [us]: %d' % dark_times[index][0])
-                print('\n trigger in: %s' %  trigger_ins[index][0])
-                print('\n trigger out: %s' % trigger_outs[index][0])
+                print('\n exposure [us]: %d' % exposures[index] )
+                print('\n dark time [us]: %d' % dark_times[index])
+                print('\n trigger in: %s' %  trigger_ins[index])
+                print('\n trigger out: %s' % trigger_outs[index])
+                
+            self.configure_lut(len(encoding), 1)
             
-            print("\n- UPLOAD IMAGE -")
-            self.upload_image(image, self.encoded_images_list[index], 
-                              self.sizes_list[index])
-
-            # start sequence
-            """
-            self.set_led_pwm(0)
-            time.sleep(0.1)
-            self.set_led_pwm(128)
-            time.sleep(0.1)
-            """
+            self.set_bmp(0, len(enc))
+            
+            self.load_bmp(enc,len(enc))
+            
             self.set_led_pwm(brightness[index])
-            #time.sleep(1)
-            start_time = time.process_time()*1e6
-            
-            display_time = 0
-            print('start time: %f' %(start_time))
             
             self.start_sequence()
+            
             st = time.clock();
-            #time.sleep(exposures[index][0]/1000000)
             
-            
-            while display_time <= exposures[index][0]:
+            while display_time <= exposures[index]:
                 display_time = (time.clock()-st)*1e6
-                print(display_time)
-                #print((time.clock()-st)*1e6)
-                #display_time = time.process_time()*1e6 - start_time
-            
-                    
-            # wait some time, therefore projector can finish displaying the image
-            #waiting_time = (exposures[index][0] + dark_times[index][0]) / 1000000
+                #print(display_time)
+
 
             self.set_led_pwm(0)
             self.stop_sequence()
             
-            
             start_time = time.process_time()*1e6
             
-            while wait_time <= dark_times[index][0]:
+            if dark_times[index] > 0:
+                while wait_time <= dark_times[index]:
+                    wait_time = time.process_time()*1e6 - start_time
+                    #print(wait_time)
+            
+            self.stop_sequence()
+        
+            start_time = time.process_time()*1e6
+            
+            while wait_time <= dark_times[index]:
                 wait_time = time.process_time()*1e6 - start_time
             
-            
-            
-            print('display time: %f' %(display_time))
             if debug:
                 print("\n- DISPLAY IMAGE -")
-            
-            
-            if not dark_times[index][0] == 0:
-                time.sleep(dark_times[index][0])
-            
-            if debug:
-                print('\nwaited time [s]: %f' % (dark_times[index][0]))
+                print('\ndisplay time: %f' %(display_time))
+                print('\nwaited time [s]: %f' %(wait_time))
             
             print('\n')
-
+        
         self.stop_sequence()
         self.set_led_pwm(0)
-        #self.idle_on()
-            
-    def show_image_sequence(self, images, brightness, exposures, dark_times,
-                            trigger_ins,  trigger_outs, debug=False):
-        """
-        Defines and start's a sequence of always a single image from a list of
-        images.
-
-        Parameters
-        ----------
-        images : list list numpy array
-            A List containing list's each containing a single image 
-            represented by a numpy array.
-        brightness : list int
-            A List containing the brightness value as the blue LED PWM current,
-            for each picture. Must have the same length like images.
-        exposure : list of list's of int
-            A List of list's of each containing 30 entries with the same 
-            value. Couldn't find a explanation for this data structure.
-        dark_time : list list int
-            List of list's each containing 30 entries with the same 
-            value. Couldn't find a explanation for this data structure.
-        trigger_in : list list bool
-            List of list's each containing if a trigger in signal is 
-            used or not represented as an boolean.
-        trigger_out : list of list's of bool
-            List of list's each containing if a trigger out signal is 
-            used or not represented as an boolean.
-        debug : boolean, optional
-           If True, than debug messages will be displayed in the console.
-           The default is False. 
-
-        Returns
-        -------
-        None.
-
-        """
-        # minimum wait time in sec to have enough time for a single image to 
-        # be displayed
-        minimum_wait_time = 0.00
-        
-        # stop any already existing sequence
-        self.stop_sequence()
-        self.set_led_pwm(0)
-        self.idle_off()
-        
-        # change to pattern on the fly mode
-        self.change_mode(3)
-        upload_time = 0
-        
-        for index, image in enumerate(images):
-            
-            if debug:
-                print("image Index %d " % index)
-                print('\n current image settings:')
-                print('\n brightness: %d' % brightness[index])
-                print('\n exposure [us]: %d' % exposures[index][0] )
-                print('\n dark time [us]: %d' % dark_times[index][0])
-                print('\n trigger in: %s' %  trigger_ins[index][0])
-                print('\n trigger out: %s' % trigger_outs[index][0])
-            
-            upload_time = time.process_time() - upload_time
-            
-            self.define_sequence(image, exposures[index], trigger_ins[index],
-                                 dark_times[index], trigger_outs[index], 1)
-            
-            if debug:
-                print("upload time [s]: %f" % upload_time)
-        
-            # start sequence
-            self.set_led_pwm(brightness[index])
-            self.start_sequence()
-            
-            if debug:
-                print("display image")
-                
-            # wait some time, therefore projector can finish displaying the image
-           # waiting_time = (exposures[index][0] + dark_times[index][0]) / 1000000
-            #time.sleep(waiting_time)
-            
-            #if debug:
-            #    print('\n total waited time [s]: %f' % (waiting_time + minimum_wait_time))
-            
-            print('\n')
-            self.set_led_pwm(0)
-            self.stop_sequence()
-
-        self.stop_sequence()
-        self.set_led_pwm(0)
-        self.idle_on()
 
     def get_minimum_led_pattern_exposure(self):
         """
@@ -2187,7 +1378,7 @@ class PycrafterGUI():
         None.
 
         """
-        """
+        
         try:
             # create a DMD class object
             self.dlp = DMD()
@@ -2198,12 +1389,11 @@ class PycrafterGUI():
             #self.dlp.idle_on()
             #set led to 0
             self.set_led_pwm(0)
-            
             # change to pattern on the fly mode
             self.dlp.change_mode(3)
         except:
             print('No usb connection to projector at start up.')
-        """
+        
         
         # the parameters for the imagae sequences
         self.image_file_name_list = []
@@ -2217,11 +1407,14 @@ class PycrafterGUI():
         self.image_dark_time = []
         self.image_trigger_in = []
         self.image_trigger_out = []
+        self.encoded = []
+        self.sequence_data = []
         
         # variables for the gui logic
         self.is_data_loaded = False
         self.is_idle = False
         self.is_encoded = False
+        self.is_matlab_encoded = False
         
         # tkinter settings
         self.windowDimension = "200x200"
@@ -2259,24 +1452,31 @@ class PycrafterGUI():
         
          # button for encoding a image sequence
         self.encode_image_sequence_button = tk.Button(master=self.Gui,
-                                                      text="Encode Image Sequence",
+                                                      text="Encode Python",
                        command=self.encoding_image_sequence,
                        background="red")
         self.encode_image_sequence_button.grid(column=1, row=2)
+        
+         # button for enable disable idle mode of the projector
+        self.encode_matlab_button = tk.Button(master=self.Gui,
+                                                       text="Encode MATLAB",
+                        command=self.encode_matlab,
+                        background="green")
+        self.encode_matlab_button.grid(column=1, row=3)
         
         # button for starting a sequence
         self.start_image_sequence_button = tk.Button(master=self.Gui,
                                                        text="Start Image Sequence",
                         command=self.start_image_sequence,
                         background="red")
-        self.start_image_sequence_button.grid(column=1, row=3)
+        self.start_image_sequence_button.grid(column=1, row=4)
         
         # button for enable disable idle mode of the projector
         self.activate_standby_button = tk.Button(master=self.Gui,
                                                        text="Activate Standby",
                         command=self.activate_standby,
                         background="green")
-        self.activate_standby_button.grid(column=1, row=4)
+        self.activate_standby_button.grid(column=1, row=5)
         
     def gui_logic(self):
         """
@@ -2295,7 +1495,7 @@ class PycrafterGUI():
             self.encode_image_sequence_button.config(state='normal', background='green')
             
         # controlls the start image sequence button
-        if  self.is_encoded == False or self.is_idle == True or self.is_data_loaded == False:
+        if  self.is_matlab_encoded == False or self.is_idle == True or self.is_data_loaded == False:
             self.start_image_sequence_button.config(state='disabled', background='red')
         else:
             self.start_image_sequence_button.config(state='normal', background='green')
@@ -2372,264 +1572,151 @@ class PycrafterGUI():
         if debug:
             print(self.sequence_folder_name)
             
+        self.load_all_data()
+            
         # calls function to load in parameter and image data
-        self.load_image_sequence_data(True)
+        #self.load_image_sequence_data(True)
         
-    def load_image_sequence_data(self, debug=False):
-        """
-        This function loads in the parameter data and the image data from the 
-        selected folder.
-
-        Parameters
-        ----------
-        debug : boolean, optional
-             If True, than debug messages will be displayed in the console.
-             The default is False.
-
-        Raises
-        ------
-        Exception
-            Throws an excpetion, when the number of image parameters is not 
-            the same with number of loaded images.
-
-        Returns
-        -------
-        None.
-
-        """
-        # if we load in a new sequence, let the user encode again
-        self.is_encoded = False
-
-        # find sequance_param.txt and save full file name (path)
-        self.sequence_param_file_name = "empty"
-        for file_name in os.listdir(self.sequence_folder_name):
-            # get the file extension
-            name, ext = os.path.splitext(file_name)
-            full_file_name = os.path.join(
-                self.sequence_folder_name, file_name)
-            # only save if the image files have the following file extensions
-            if ext == '.txt':
-                self.sequence_param_file_name = full_file_name
-                
-        if debug:
-            print(self.sequence_param_file_name)
-            
-        # start function to fetch image paramters from the .txt file
-        self.load_image_sequence_setting(True)
+    def load_all_data(self, debug=True):
         
-        # start a function to load in the images depending on the image names
-        # from the parameter .txt file
-        self.load_images(True)
+        self.sequence_data = []
         
-        # check that the length of the parameters is te same like the image
-        # list and throw exception if needed
-        if (len(self.image_names) == len(self.images) and 
-            len(self.image_index) == len(self.images) and  
-             len(self.image_brightness) == len(self.images) and  
-              len(self.image_exposure) == len(self.images) and  
-               len(self.image_dark_time) == len(self.images) and  
-                len(self.image_trigger_out) == len(self.images) and 
-                 len(self.image_trigger_in) == len(self.images)):
-                     self.is_data_loaded = True
-        else:
-            raise Exception('Sequence parameter length is not equal the' + 
-                            ' number of loaded images. Please check length of your' + 
-                            ' image parameters and your number of images.' + 
-                            (' Number of images is %d.' %(len(self.images)) ))
-            self.is_data_loaded = False
-
-        # TODO: maybe move this part to startup
-        # put the projector in idle mode and set led current to 0, because if
-        # we turn on the projector connected with a HDMI cable, then it will
-        # start to display a live image immedially
-        """
-        self.dlp.idle_on()
-        self.dlp.set_led_pwm(0)
-        """
+        file_name = self.sequence_folder_name + '/sequence_param.txt'
         
-    def load_image_sequence_setting(self, debug=False):
-        """
-        Function to fetch the different parameters for different images from 
-        the parameter .txt file.
-
-        Parameters
-        ----------
-        debug : boolean, optional
-             If True, than debug messages will be displayed in the console.
-             The default is False.
-
-        Raises
-        ------
-        Exception
-            Throws an exception if the parameter text file could not be found
-            or opened.
-
-        Returns
-        -------
-        None.
-
-        """
-        # clear all image parameter lists before appending to them
-        self.parameters = []
-        self.image_names = []
-        self.image_index = []
-        self.image_brightness = []
-        self.image_exposure = []
-        self.image_dark_time = []
-        self.image_trigger_in = []
-        self.image_trigger_out = []
-        
-        # try to open the file and read content as lines (seperated lists) 
         try:
-            file = open(self.sequence_param_file_name,'r')
+            file = open(file_name, 'r')
+            lines = file.readlines()
+            file.close()
         except:
-            raise Exception(
-                "Could not open 'sequence_param.txt'." +
-                "Make sure 'sequence_param.txt' file exist and has correct name.")
-        # read the file and save individual lines as a list with strings
-        lines = file.readlines()
-        file.close()
+            raise Exception('No "sequence_param.txt" could be' + 
+                            ' found in the image folder.')
         
-        # TODO: Here we should remove comments!!!
-        # remove comments tsrating wint an '#'
+        filtered_line = []
+        
+        # filte out blank line and comments (lines with #)
         for line in lines:
-            if '#' in line:
-                lines.remove(line)
-        # TODO: Here we should be able to remove uneccessary '\n' from the
-        #       lines          
-        for parameter in self.parameters:
-            for text in parameter:
-                print(text)
-                if '\n' in parameter:
-                    print('yes')
-                    parameter.remove(text)
-        
-        # split each string in a list by ';' and save splitted strings in 
-        # current list
-        for text in lines:
-            self.parameters.append(text.split(';'))
-
-        print(self.parameters)
-            
-        # remove the header line
-        # self.parameters.remove(self.parameters[0])
-            
-        # iterate through each list and save all different parameters of each 
-        # picture in seperate list's
-        for parameter in self.parameters:
-            self.image_names.append(str(parameter[0]))
-            self.image_index.append(int(parameter[1]))
-            self.image_brightness.append(int(parameter[2]))
-            self.image_exposure.append(int(parameter[3]))
-            self.image_dark_time.append(int(parameter[4]))
-            
-            # parse for the trigger_in and the trigger_out variables
-            if 'True' in parameter[5] or 'true' in parameter[5] or '1' in parameter[5]:
-                self.image_trigger_in.append(True)
-            elif 'False' in parameter[5] or 'false' in parameter[5] or '0' in parameter[5]:
-                self.image_trigger_in.append(False)
-            
-            if 'True' in parameter[6] or 'true' in parameter[6] or '1' in parameter[6]:
-                self.image_trigger_out.append(1)
-            elif 'False' in parameter[6] or 'false' in parameter[6] or '0' in parameter[6]:
-                self.image_trigger_out.append(0)
-
-        # show all image parameers if needed
-        if debug:
-            print('\n')
-            print('Input from %s' % self.sequence_param_file_name)
-            print('\n All Parameters:\t')
-            print(self.parameters)
-            print('\n Image Names:\t')
-            print(self.image_names)
-            print('\n Image Index:\t')
-            print(self.image_index)
-            print('\n Image Brightness:\t')
-            print(self.image_brightness)
-            print('\n Image Exposure:\t')
-            print(self.image_exposure)
-            print('\n Dark Time:\t')
-            print(self.image_dark_time)
-            print('\n Image Trigger In:\t')
-            print(self.image_trigger_in)
-            print('\n Image Trigger Out:\t')
-            print(self.image_trigger_out)
-            print('\n')
-
-        
-    def load_images(self, debug=False):
-        """
-        Function to load all images, that are noted in the image parameter
-        .txt file.
-
-        Parameters
-        ----------
-        debug : boolean, optional
-             If True, than debug messages will be displayed in the console.
-             The default is False.
-
-        Raises
-        ------
-        Exception
-            Throws an exception if the parameter text file could not be found
-            or opened.
-
-        Returns
-        -------
-        None.
-
-        """
-        self.images = []
-        
-        # load in images as list of list of numpy arrays
-        # load all images from the previous created image list 
-        for image_name in self.image_names:
-            
-            full_image_name = os.path.join(
-                self.sequence_folder_name, image_name)
-            
-            name, ext = os.path.splitext(full_image_name)
-            
-            if ext == '.png' or ext == '.jpg' or ext == '.tif' or ext == '.bmp':
-            
-                if debug:
-                    print("\nfetching image %s " % full_image_name)
+            if not '#' in line:
+                if not len(line) <= 3:
+                    filtered_line.append(line)
                     
-                image = [numpy.asarray(PIL.Image.open(full_image_name))]
-                self.plot_image(image)
-                self.images.append(image)
-
-            else:
-                raise Exception(
-                    "Could not load all images." + 
-                    "Image %s is not in the format .png or .jpg or .tif ." % (image_name))
+        # split the line with ; and put them in 2D matrix
+        for line in filtered_line:
+            splitted_line = line.split(';')
+            
+            # remove everything after 7th entry
+            del splitted_line[7:len(splitted_line)]
+            
+            # save data in sequence data
+            self.sequence_data.append(splitted_line)
+        
+        # for each entry now load the image
+        for index, line in enumerate(self.sequence_data):
+            
+            # image nam is always the first one
+            image_name = line[0]
+            
+            # load in the images as a numpy array with datatype uint8
+            try:
+                image_data = numpy.asarray(
+                    PIL.Image.open(self.sequence_folder_name + '/' + image_name),
+                    dtype=numpy.uint8)
+            except:
+                raise Exception('Image %s could not be found or loaded'%(image_name) + 
+                                'Check that the image is existing or remove it' + 
+                                'from the sequence_param.txt list.' )
                 
-            # TODO: Here we should also check the size of the images, since
-            #       only 2D arrays are usable, therefore make all images
-            #       as greyscale images and throw a warning if image size is
-            #       too big.
                 
-            # TODO: show images that where loaded in as a picture in the spyder
-            #       console
+            # also check here that the image data is single matrix and does not have 
+            # multiple color channels!
+            # also check that the images have the correct format
+            if not image_data.shape == (1080, 1920):
+                raise Exception('The size of the images you are using is wrong.' + 
+                                'The images must be the in the size of (1080,1920).' + 
+                                'Also they have to be 8 Bit grayscale images.')
+            
+            # append the image data at the 8th entry of the sequence data
+            self.sequence_data[index].append(image_data)
+            
+            # plot the load images in the console
+            fig = plt.figure()
+            plt.imshow(image_data, cmap='gray')
+            plt.colorbar()
+            plt.show()
+
+        # check if we have the encoded_images.txt, because it is not necessary
+        files = os.listdir(self.sequence_folder_name)
+        if 'encoded_images.txt' in files:
+            self.is_matlab_encoded = True
+            print('MATLAB Encoding was found.')
+        else:
+            self.is_matlab_encoded = False
+            print('No MATLAB encoding was found.')
+            
+        # if the encoded data exists, we load them in a seperate array
+        if self.is_matlab_encoded == True:
+            
+            # read in all lines
+            file_name = self.sequence_folder_name + '/encoded_images.txt'
+            file = open(file_name, 'r')
+            encoded_raw = file.readlines()
+            file.close()
+            encoded = []
+        
+            # iterate over each line, split up filter elements
+            for index in range(1, len(encoded_raw), 1):
+                print(index)
+                if index % 2 == 0:
+                    print(index)
+                    enc_raw_splitted = encoded_raw[index].split(',')
+                    enc_raw_filtered = []
+                    
+                    for element in enc_raw_splitted:
+                        if not element == '' and not element == '\n':
+                            enc_raw_filtered.append(element)
+                            
+                    encoded.append(list(map(int,enc_raw_filtered)))
+                else:
+                    image_name = encoded_raw[index].split(',')[0]
+                    encoded.append(image_name)
+                    
+            # check here, that the number of encoded entries is double the number of
+            # images. It has to be double, since encodin data contains also the image
+            # names
+            if not len(encoded) == len(self.sequence_data) * 2:
+                raise Exception('The number of encded image data found is not the' +
+                                'same as the number of images found. ' +
+                                '# images = %d' %(len(self.sequence_data)) + 
+                                '# encoded images = %d'%(len(encoded)/2))
                 
-    def plot_image(self, image):
-        """
-        Function to plot the loaded images in the Spyder GUI
+                    
+            # now save the data in the sequence_data array to the corresponding image
+            for index, line in enumerate(self.sequence_data):
+                image_name = line[0]
+                encoded_index = encoded.index(image_name)
+                self.sequence_data[index].append(encoded[encoded_index+1])
+                print(encoded[encoded_index])
+                
+        # soring function that reurns the index of a list in the sequence_data list
+        def sort_index(element):
+            return element[1]
+        
+        # now we can sort sequence_data according to the index of the images
+        self.sequence_data.sort(reverse=False, key=sort_index)
+        
+        encoded_raw = []
+        filtered_line= []
+        
+        self.is_data_loaded = True
+        
+        print(self.is_data_loaded)
+        print(self.is_matlab_encoded)
 
-        Parameters
-        ----------
-        image : TYPE
-            DESCRIPTION.
-
-        Returns
-        -------
-        None.
-
-        """
-        fig = plt.figure()
-        plt.imshow(image[0], cmap='gray')
-        plt.colorbar()
-        plt.show()
+    def encode_matlab(self):
+        #works for mac
+        #os.system('open ./encoding_gui.exe')
+        # works for windoof, but not sure
+        os.startfile('encoding_gui.exe')
+        
                 
     def encoding_image_sequence(self, debug=False):
         """
@@ -2651,7 +1738,6 @@ class PycrafterGUI():
         # reset lists from the dlp class for the encoded image data
         self.dlp.size_list = []
         self.dlp.encoded_images_list = []
-        
         
         exposures = []
         dark_times = []
@@ -2707,7 +1793,6 @@ class PycrafterGUI():
         # if successfull enable start of the sequence
         self.is_encoded = True
         
-       
                 
     def start_image_sequence(self, debug=False):
         """
@@ -2725,28 +1810,29 @@ class PycrafterGUI():
 
         """
         
-        # init list's where the parameter list's will be saved in
+        brightness= []
+        encoded = []
         exposures = []
         dark_times = []
         trigger_ins = []
         trigger_outs = []
-        images_sorted = []
-    
-        print(len(self.images))
-
-        # sorting all parameters again.... and send to the dlp
-        for i, index in  enumerate(self.image_index):
-            if i + 1 in self.image_index:
-                im_index = self.image_index.index(i + 1)
-                print(im_index)
-                print(self.image_names[im_index]+ '\n')
-                exposures.append( [self.image_exposure[im_index]] * 30 )
-                dark_times.append( [self.image_dark_time[im_index]] * 30 )
-                trigger_ins.append( [self.image_trigger_in[im_index]] * 30 )
-                trigger_outs.append( [self.image_trigger_out[im_index]] * 30 )
-                images_sorted.append(self.images[im_index])
+        image = []
         
-        self.dlp.show_image_sequence_2(images_sorted, self.image_brightness, 
+        if self.is_matlab_encoded:
+        
+            # convert the sequence data in a format for the dlp
+            for image_data in self.sequence_data:
+                
+                brightness.append(image_data[2])
+                exposures.append(image_data[3])
+                dark_times.append(image_data[4])
+                trigger_ins.append(image_data[5])
+                trigger_outs.append(image_data[6])
+                image.append(image_data[7])
+                encoded.append(image_data[8])
+
+            self.dlp.show_image_sequence_3(encoded, brightness, 
                                  exposures,  dark_times, trigger_ins,
                                  trigger_outs, True) 
         
+GUI = PycrafterGUI()

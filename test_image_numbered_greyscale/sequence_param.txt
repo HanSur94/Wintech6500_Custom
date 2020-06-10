@@ -1,0 +1,15 @@
+# name; index; brightness; exposure; dark_time; trigger_in; trigger_out;
+test_image_1.bmp; 1; 255; 3000000; 0; 0; 1; ; ; ;
+test_image_2.bmp; 3; 255; 3000000; 0; 0; 1;
+test_image_3.bmp; 4; 255; 3000000; 0; 0; 1;
+test_image_4.bmp; 5; 255; 3000000; 0; 0; 1;
+test_image_5.bmp; 5; 255; 3000000; 0; 0; 1;
+
+
+
+
+
+
+
+
+
