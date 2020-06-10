@@ -28,12 +28,9 @@ import PIL.Image
 import os
 import tkinter as tk
 from tkinter import filedialog
-import threading
-import RLE
-import encoding_functions
-
 import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
+import datetime
+
 
 
 def load_image_sequence(image_folder_name, print_image_name=False):
@@ -1375,6 +1372,7 @@ class PycrafterGUI():
         """
         
         try:
+            """
             # create a DMD class object
             self.dlp = DMD()
             # send wakeup to controller
@@ -1386,6 +1384,7 @@ class PycrafterGUI():
             self.set_led_pwm(0)
             # change to pattern on the fly mode
             self.dlp.change_mode(3)
+            """
         except:
             print('No usb connection to projector at start up.')
         
@@ -1405,6 +1404,9 @@ class PycrafterGUI():
         self.encoded = []
         self.sequence_data = []
         
+        # to count for the listbox entries
+        self.listbox_count = 0
+        
         # variables for the gui logic
         self.is_data_loaded = False
         self.is_idle = False
@@ -1412,7 +1414,7 @@ class PycrafterGUI():
         self.is_matlab_encoded = False
         
         # tkinter settings
-        self.windowDimension = "200x200"
+        self.windowDimension = "800x200"
         self.Gui = tk.Tk()
         self.Gui.title("PycrafterGUI")
         self.Gui.geometry(self.windowDimension)
@@ -1420,13 +1422,57 @@ class PycrafterGUI():
         # run startup functions and gui loop
         self.Gui.update_idletasks()
         self.create_widgets()
+        # write welcome message
+        self.write_message('action','Hello and Welcome!')
         self.gui_logic()
         self.Gui.mainloop()
+        
+        
         
         # write a function that pings the projector in a time intervall, which
         # prevents the usb connection from falling asleep
         # let it runs in a seperate process
         #self.keep_dlp_awake()
+        
+    def write_message(self, message_type, message_string):
+        
+        # get current timestamp
+        self.currentDateTime = datetime.datetime.now()
+        currentDateTimeString = self.currentDateTime.strftime("%d-%b-%Y "
+                                                              "(%H:%M:%S)")
+
+        # depending on the message type, set background and font color
+        if message_type == "warning":
+            bgColor = 'red'
+            textColor = 'white'
+        elif message_type == "report":
+            bgColor = 'green'
+            textColor = 'white'
+        elif message_type == "action":
+            bgColor = 'white'
+            textColor = 'black'
+        else:
+            bgColor = "white"
+            textColor = 'black'
+
+        # check if the string has multiple lines
+        if "\n" in message_string:
+            # cute the string at every new line«
+            message = message_string.split("\n")
+            message = [currentDateTimeString] + message
+        else:
+            message = [currentDateTimeString, message_string]
+        for iMessage in message:
+            # print message
+            self.message_listbox.insert(tk.END, iMessage)
+            self.message_listbox.itemconfig(tk.END, {'bg': bgColor})
+            self.message_listbox.itemconfig(tk.END, {'fg': textColor})
+            
+        # print empty message        
+        #self.message_listbox.insert(tk.END, message)
+        #self.message_listbox.itemconfig(tk.END, {'bg': bgColor})
+        #self.message_listbox.itemconfig(tk.END, {'fg': textColor})
+
         
     def create_widgets(self):
         """
@@ -1440,7 +1486,7 @@ class PycrafterGUI():
         
         # button for selecting image folder
         self.select_sequence_folder_button = tk.Button(master=self.Gui,
-                                                       text="Select Image Folder",
+                                                   text="Select Image Folder",
                         command=self.select_sequence_folder,
                         background="blue")
         self.select_sequence_folder_button.grid(column=1, row=1)
@@ -1461,17 +1507,28 @@ class PycrafterGUI():
         
         # button for starting a sequence
         self.start_image_sequence_button = tk.Button(master=self.Gui,
-                                                       text="Start Image Sequence",
+                                                 text="Start Image Sequence",
                         command=self.start_image_sequence,
                         background="red")
         self.start_image_sequence_button.grid(column=1, row=4)
         
         # button for enable disable idle mode of the projector
         self.activate_standby_button = tk.Button(master=self.Gui,
-                                                       text="Activate Standby",
+                                                 text="Activate Standby",
                         command=self.activate_standby,
                         background="green")
         self.activate_standby_button.grid(column=1, row=5)
+        
+
+        # scrollbar for the listbox
+        self.listbox_scrollbar = tk.Scrollbar(master=self.Gui)
+        self.listbox_scrollbar.grid(column=2, row=1, rowspan=5)
+        
+        # listbox for messages for debugging
+        self.message_listbox = tk.Listbox(master=self.Gui,
+                              yscrollcommand = self.listbox_scrollbar.set)
+        self.message_listbox.grid(column=3, row=1,columnspan=3, rowspan=5)
+        
         
     def gui_logic(self):
         """
@@ -1484,22 +1541,28 @@ class PycrafterGUI():
 
         """
         # controll the encode image sequence button
-        if self.is_data_loaded == False or self.is_idle == True :
-            self.encode_image_sequence_button.config(state='disabled', background='red')
+        if self.is_data_loaded == False or self.is_idle == True:
+            self.encode_image_sequence_button.config(state='disabled',
+                                                     background='red')
         else:
-            self.encode_image_sequence_button.config(state='normal', background='green')
+            self.encode_image_sequence_button.config(state='normal',
+                                                     background='green')
             
         # controlls the start image sequence button
         if  self.is_matlab_encoded == False or self.is_idle == True or self.is_data_loaded == False:
-            self.start_image_sequence_button.config(state='disabled', background='red')
+            self.start_image_sequence_button.config(state='disabled',
+                                                    background='red')
         else:
-            self.start_image_sequence_button.config(state='normal', background='green')
+            self.start_image_sequence_button.config(state='normal',
+                                                    background='green')
         
         # controlls the standby/awake button    
         if self.is_idle == False:
-            self.activate_standby_button.config(background='green', text="Activate Standby")
+            self.activate_standby_button.config(background='green',
+                                                text="Activate Standby")
         else:
-            self.activate_standby_button.config(background='red', text="Wake Up")
+            self.activate_standby_button.config(background='red',
+                                                text="Wake Up")
             
         """    
         try:    
@@ -1613,7 +1676,8 @@ class PycrafterGUI():
             # load in the images as a numpy array with datatype uint8
             try:
                 image_data = numpy.asarray(
-                    PIL.Image.open(self.sequence_folder_name + '/' + image_name),
+                    PIL.Image.open(self.sequence_folder_name + '/' +
+                                   image_name),
                     dtype=numpy.uint8)
             except:
                 raise Exception('Image %s could not be found or loaded'%(image_name) + 
@@ -1625,9 +1689,10 @@ class PycrafterGUI():
             # multiple color channels!
             # also check that the images have the correct format
             if not image_data.shape == (1080, 1920):
-                raise Exception('The size of the images you are using is wrong.' + 
-                                'The images must be the in the size of (1080,1920).' + 
-                                'Also they have to be 8 Bit grayscale images.')
+                raise Exception('The size of the images you are using' + 
+                                'is wrong. The images must be the in' + 
+                                'the size of (1080,1920). Also they have' +
+                                'to be 8 Bit grayscale images.')
             
             # append the image data at the 8th entry of the sequence data
             self.sequence_data[index].append(image_data)
@@ -1674,24 +1739,26 @@ class PycrafterGUI():
                     image_name = encoded_raw[index].split(',')[0]
                     encoded.append(image_name)
                     
-            # check here, that the number of encoded entries is double the number of
-            # images. It has to be double, since encodin data contains also the image
-            # names
+            # check here, that the number of encoded entries is double the 
+            # number of images. It has to be double, since encodin data 
+            #contains also the image names
             if not len(encoded) == len(self.sequence_data) * 2:
-                raise Exception('The number of encded image data found is not the' +
-                                'same as the number of images found. ' +
-                                '# images = %d' %(len(self.sequence_data)) + 
+                raise Exception('The number of encded image data found is' + 
+                                'not the same as the number of images found.'+
+                                ' # images = %d' %(len(self.sequence_data)) + 
                                 '# encoded images = %d'%(len(encoded)/2))
                 
                     
-            # now save the data in the sequence_data array to the corresponding image
+            # now save the data in the sequence_data array to the 
+            # corresponding image
             for index, line in enumerate(self.sequence_data):
                 image_name = line[0]
                 encoded_index = encoded.index(image_name)
                 self.sequence_data[index].append(encoded[encoded_index+1])
                 print(encoded[encoded_index])
                 
-        # soring function that reurns the index of a list in the sequence_data list
+        # soring function that reurns the index of a list in the sequence_data
+        # list
         def sort_index(element):
             return element[1]
         
@@ -1716,9 +1783,19 @@ class PycrafterGUI():
         print(self.is_matlab_encoded)
         
     def encode_matlab(self):
+        """
+        Starts the MATLAB encoding program.
+
+        Returns
+        -------
+        None.
+
+        """
+        # TODO: Here can maybe check what kind of operating system we use?
         #works for mac
         #os.system('open ./encoding_gui.exe')
-        # works for windoof, but not sure
+        
+        # works for win-doof, but not sure
         os.startfile('encoding_gui.exe')
         
                 
