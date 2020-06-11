@@ -26,70 +26,11 @@ import time
 import numpy
 import PIL.Image
 import os
+import sys
 import tkinter as tk
 from tkinter import filedialog
 import matplotlib.pyplot as plt
 import datetime
-
-
-
-def load_image_sequence(image_folder_name, print_image_name=False):
-    """
-    Loads in multiple images from a folder.
-
-    Parameters
-    ----------
-    image_folder_name : str
-         The local path to the folder. E.g.: Images are in the subfolder 
-        "image_folder" in the local directory of the running script. Therefore
-        the image_folder_name must be: "./image_folder/" .
-    print_image_name : boolean, optional
-        If True, then the image path will be printed in the console.
-        The default is False.
-
-    Returns
-    -------
-    image_sequence : numpy array list
-        A list of numpy array's containing the image data.
-
-    """
-    # init image sequence list
-    image_sequence = []
-    
-    # fetch all files of the image_folder_name
-    for filename in os.listdir(image_folder_name):
-        
-        # print file name if needed
-        if print_image_name:
-            print(os.path.join(image_folder_name,filename))
-            
-        # load image and append to list
-        image_sequence.append(
-            load_image(os.path.join(image_folder_name,filename))[0])
-        
-    return image_sequence
-
-
-def load_image(image_name):
-    """
-    Loads in a single image.
-
-    Parameters
-    ----------
-    image_name : str
-        The Path & Name of the image. E.g.: The images is in the subfolder 
-        "image_folder" in the local directory of the running script and the 
-        name of the image is "test_image.png". Therefore
-        the image_name must be: "./image_folder/test_image.png" .
-
-    Returns
-    -------
-    list
-        The image as a numpy array in a list.
-
-    """
-    # load in a image and retrun as list of numpy arrays
-    return [numpy.asarray(PIL.Image.open(image_name))]
 
 def convert_num_to_bit_string(number, length):
     """
@@ -1419,7 +1360,6 @@ class PycrafterGUI():
         self.is_data_loaded = False
         self.is_idle = False
         self.is_encoded = False
-        self.is_matlab_encoded = False
         
         # tkinter settings
         self.windowDimension = "800x200"
@@ -1484,27 +1424,6 @@ class PycrafterGUI():
             self.message_listbox.itemconfig(tk.END, {'bg': bgColor})
             self.message_listbox.itemconfig(tk.END, {'fg': textColor})
             
-            
-        """
-        # check if the string has multiple lines
-        if "\n" in message_string:
-            # cut the string at every new line«
-            message = message_string.split("\n")
-            message = [currentDateTimeString] + message
-        else:
-            message = [currentDateTimeString, message_string]
-        for iMessage in message:
-            # print message
-            self.message_listbox.insert(tk.END, iMessage)
-            self.message_listbox.itemconfig(tk.END, {'bg': bgColor})
-            self.message_listbox.itemconfig(tk.END, {'fg': textColor})
-        """
-            
-        # print empty message        
-        #self.message_listbox.insert(tk.END, message)
-        #self.message_listbox.itemconfig(tk.END, {'bg': bgColor})
-        #self.message_listbox.itemconfig(tk.END, {'fg': textColor})
-
         
     def create_widgets(self):
         """
@@ -1529,7 +1448,7 @@ class PycrafterGUI():
          # button for encoding a image sequence
         self.encode_image_sequence_button = tk.Button(master=self.Gui,
                                                       text="Encode Python",
-                       command=self.encoding_image_sequence)
+                       command=self.encode_python)
         self.encode_image_sequence_button.grid(column=1, row=2)
         
          # button for enable disable idle mode of the projector
@@ -1566,10 +1485,9 @@ class PycrafterGUI():
         self.listbox_scrollbar.config(command=self.message_listbox.yview)
         
     def set_dark_mode(self):
+        
         # set the colour schemes for dark mode app
-        
 
-        
         self.Gui.configure(background=self.bg_cl)
         
         self.select_sequence_folder_button.configure(
@@ -1601,23 +1519,24 @@ class PycrafterGUI():
 
         """
         # controll the encode image sequence button
-        if self.is_data_loaded == False or self.is_idle == True:
+        if self.is_data_loaded == False:
             self.encode_image_sequence_button.config(state='disabled',
-                                                     bg=self.btn_bg_disabled_cl,
-                                                     fg=self.btn_fg_cl)
+                                                 bg=self.btn_bg_disabled_cl,
+                                                 fg=self.btn_fg_cl)
         else:
             self.encode_image_sequence_button.config(state='normal',
-                                                     background='green')
+                                                 bg=self.btn_bg_cl,
+                                                 fg=self.btn_fg_cl)
             
         # controlls the start image sequence button
-        if  self.is_matlab_encoded == False or self.is_idle == True or self.is_data_loaded == False:
+        if  self.is_encoded == False or self.is_idle == True or self.is_data_loaded == False:
             self.start_image_sequence_button.config(state='disabled',
-                                                     bg=self.btn_bg_disabled_cl,
-                                                     fg=self.btn_fg_cl)
+                                    bg=self.btn_bg_disabled_cl,
+                                    fg=self.btn_fg_cl)
         else:
             self.start_image_sequence_button.config(state='normal',
-                                                     bg=self.btn_bg_disabled_cl,
-                                                     fg=self.btn_fg_cl)
+                                                    bg=self.btn_bg_disabled_cl,
+                                                    fg=self.btn_fg_cl)
         
         # controlls the standby/awake button    
         if self.is_idle == False:
@@ -1707,18 +1626,19 @@ class PycrafterGUI():
         
         self.sequence_data = []
         
+        # open and read file
         file_name = self.sequence_folder_name + '/sequence_param.txt'
-        
         try:
             file = open(file_name, 'r')
             lines = file.readlines()
             file.close()
         except Exception as exception:
             self.write_message('warning',str(exception))
+            self.is_data_loaded = False
+            self.is_encoded = False
         
         filtered_line = []
-        
-        # filte out blank line and comments (lines with #)
+        # filter out blank line and comments (lines with #)
         for line in lines:
             if not '#' in line:
                 if not len(line) <= 3:
@@ -1752,6 +1672,8 @@ class PycrafterGUI():
                                 'Check that the image is existing or remove it' + 
                                 'from the sequence_param.txt list.' )
                 self.write_message('warning', message_string)
+                self.is_data_loaded = False
+                self.is_encoded = False
                 
                 
             # also check here that the image data is single matrix and does not have 
@@ -1764,6 +1686,8 @@ class PycrafterGUI():
                                 'to be 8 Bit grayscale images.')
                 self.write_message('warning',message_string)
                 Exception(message_string)
+                self.is_data_loaded = False
+                self.is_encoded = False
             
             # append the image data at the 8th entry of the sequence data
             self.sequence_data[index].append(image_data)
@@ -1777,14 +1701,14 @@ class PycrafterGUI():
         # check if we have the encoded_images.txt, because it is not necessary
         files = os.listdir(self.sequence_folder_name)
         if 'encoded_images.txt' in files:
-            self.is_matlab_encoded = True
-            self.write_message('report','MATLAB Encoding was found.')
+            self.is_encoded = True
+            self.write_message('report','Encoding was found.')
         else:
-            self.is_matlab_encoded = False
-            self.write_message('report','No MATLAB encoding was found.')
+            self.is_encoded = False
+            self.write_message('report','No encoding was found.')
             
         # if the encoded data exists, we load them in a seperate array
-        if self.is_matlab_encoded == True:
+        if self.is_encoded == True:
             
             # read in all lines
             file_name = self.sequence_folder_name + '/encoded_images.txt'
@@ -1801,7 +1725,7 @@ class PycrafterGUI():
                     enc_raw_filtered = []
                     
                     for element in enc_raw_splitted:
-                        if not element == '' and not element == '\n':
+                        if not element == '' and not element == '\n' and not element == ' \n':
                             enc_raw_filtered.append(element)
                             
                     encoded.append(list(map(int,enc_raw_filtered)))
@@ -1821,6 +1745,8 @@ class PycrafterGUI():
                                 '# encoded images = %d'%(len(encoded)/2))
                 self.write_message('warning', message_string)
                 raise Exception(message_string)
+                self.is_data_loaded = False
+                self.is_encoded = False
                 
                     
             # now save the data in the sequence_data array to the 
@@ -1852,9 +1778,9 @@ class PycrafterGUI():
         filtered_line= []
         
         self.is_data_loaded = True
+        self.write_message('report',('%d Images where loaded successfully.'
+                                     %(len(self.sequence_data))))
         
-        print(self.is_data_loaded)
-        print(self.is_matlab_encoded)
         
     def encode_matlab(self):
         """
@@ -1865,24 +1791,63 @@ class PycrafterGUI():
         None.
 
         """
-        # TODO: Here can maybe check what kind of operating system we use?
-        #works for mac
-        #os.system('open ./encoding_gui.exe')
-        
-        # works for win-doof, but not sure
-        os.startfile('encoding_gui.exe')
+        # depending on the used platform start MATLAB encoding app differently
+        if sys.platform == 'win32':
+            # on windoof
+            self.write_message('action','Start MATLAB Encoding App.')
+            os.startfile('encoding_gui.exe')
+        elif sys.platform == 'darwin':
+            # on mac os
+            self.write_message('action','Start MATLAB Encoding App.')
+            os.system('open ./encoding_gui.app')
+        else:
+            self.write_message('warning',('Could not indetify the operating'+
+                                          ' systsm. Use Mac or Windows.'))
         
     def encode_python(self):
         
+        # clear existing encoded data
+        self.encoded = []
+        
+        # write data in "encoded_images.txt" and overwrite everything
+        file_name = self.sequence_folder_name + '/encoded_images.txt'
+        file = open(file_name,'w')
+        file.write('\n')
+        file.close()
+        
         # get already saved images
-        
         # call pycrafter encoding method for each image and save them in the
-        # image sequence data array --> overwrite the existing
-        
-        # save all encoding in the encoded images file
+        # image sequence data array --> overwrite if existing
+        for index, image_data in enumerate(self.sequence_data):
             
-        
-                
+            # merge the image here
+            image_data_merged = merge_images(image_data[7])
+            
+            # encode image here
+            encoded_image, encoded_size = encode(image_data_merged)
+            self.encoded.append(encoded_image)
+            
+            message_string = ('Encode image %d.'%(index))
+            self.write_message('action',message_string)
+    
+            # append data in sequence data
+            if len(self.sequence_data[index]) == 9:
+                self.sequence_data[index][8] = encoded_image
+            elif len(self.sequence_data[index]) == 8:
+                self.sequence_data[index].append(encoded_image)
+            
+            # save all encoding in the encoded images file
+            file = open(file_name,'a')
+            # write the image name
+            file.write(self.sequence_data[index][0])
+            file.write(',')
+            file.write('\n')
+            # write encoding data
+            for encoded_data in encoded_image:
+                file.write(str(encoded_data) + ', ')
+            file.write('\n')
+            file.close()
+            
     def encoding_image_sequence(self, debug=False):
         """
         Function that starts the encoding of the images and send the 
@@ -2008,3 +1973,5 @@ class PycrafterGUI():
                                  exposures,  dark_times,        trigger_ins,trigger_outs, True) 
         
 GUI = PycrafterGUI()
+sq = GUI.sequence_data
+enc = GUI.encoded
