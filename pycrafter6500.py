@@ -28,6 +28,7 @@ import PIL.Image
 import os
 import sys
 import tkinter as tk
+import tkinter.ttk as ttk
 from tkinter import filedialog
 import matplotlib.pyplot as plt
 import datetime
@@ -1424,6 +1425,17 @@ class PycrafterGUI():
             self.message_listbox.itemconfig(tk.END, {'bg': bgColor})
             self.message_listbox.itemconfig(tk.END, {'fg': textColor})
             
+    def update_progressbar(self, current_step, maximum_step):
+        value = ((current_step+1)/maximum_step)*100
+        print(value)
+        self.progressbar['value'] = value
+        self.Gui.update()
+        time.sleep(1)
+        if value == 100:
+            self.progressbar['value'] = 0
+            self.Gui.update()
+        
+            
         
     def create_widgets(self):
         """
@@ -1472,17 +1484,22 @@ class PycrafterGUI():
         
 
         # scrollbar for the listbox
-        
         self.listbox_scrollbar = tk.Scrollbar(master=self.Gui)
-        self.listbox_scrollbar.grid(column=2, row=1, rowspan=5)
+        self.listbox_scrollbar.grid(column=2, row=1, rowspan=4)
         
         # listbox for messages for debugging
         self.message_listbox = tk.Listbox(master=self.Gui,
                                   yscrollcommand=self.listbox_scrollbar.set)
-        self.message_listbox.grid(column=3, row=1,columnspan=5, rowspan=5,
+        self.message_listbox.grid(column=3, row=1,columnspan=5, rowspan=4,
                                   sticky=tk.EW)
         
         self.listbox_scrollbar.config(command=self.message_listbox.yview)
+        
+        
+        # add a progressbar
+        self.progressbar = ttk.Progressbar(master=self.Gui,          orient="horizontal", mode="determinate", maximum=100, value=0)
+        self.progressbar.grid(column=3,row=5)
+
         
     def set_dark_mode(self):
         
@@ -1847,6 +1864,9 @@ class PycrafterGUI():
                 file.write(str(encoded_data) + ', ')
             file.write('\n')
             file.close()
+            
+            self.update_progressbar(index, len(self.sequence_data))
+            
             
     def encoding_image_sequence(self, debug=False):
         """
