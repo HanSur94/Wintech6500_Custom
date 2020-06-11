@@ -1872,6 +1872,16 @@ class PycrafterGUI():
         # works for win-doof, but not sure
         os.startfile('encoding_gui.exe')
         
+    def encode_python(self):
+        
+        # get already saved images
+        
+        # call pycrafter encoding method for each image and save them in the
+        # image sequence data array --> overwrite the existing
+        
+        # save all encoding in the encoded images file
+            
+        
                 
     def encoding_image_sequence(self, debug=False):
         """
