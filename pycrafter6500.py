@@ -1312,25 +1312,6 @@ class PycrafterGUI():
         None.
 
         """
-        
-        try:
-            """
-            # create a DMD class object
-            self.dlp = DMD()
-            # send wakeup to controller
-            self.dlp.wake_up()
-            #time.sleep(1)
-            # set to idle mode to preserve DMD lifetime
-            #self.dlp.idle_on()
-            #set led to 0
-            self.set_led_pwm(0)
-            # change to pattern on the fly mode
-            self.dlp.change_mode(3)
-            """
-        except:
-            print('No usb connection to projector at start up.')
-        
-        
         # the parameters for the imagae sequences
         self.image_file_name_list = []
         self.sequence_param_file_name = "empty"
@@ -1346,8 +1327,7 @@ class PycrafterGUI():
         self.encoded = []
         self.sequence_data = []
         
-        
-        # gui darkmode style
+        # gui darkmode style colour
         self.bg_cl = 'gray20'
         self.btn_bg_cl = 'gray30'
         self.btn_fg_cl = 'gray99'
@@ -1361,6 +1341,7 @@ class PycrafterGUI():
         self.is_data_loaded = False
         self.is_idle = False
         self.is_encoded = False
+        self.is_connected = False
         
         # tkinter settings
         self.windowDimension = "800x200"
@@ -1375,10 +1356,35 @@ class PycrafterGUI():
         # write welcome message
         self.write_message('action','Hello and Welcome!')
         self.gui_logic()
+        self.Gui.protocol("WM_DELETE_WINDOW",self.on_closing)
         self.Gui.mainloop()
         
-        
-        
+        try:
+            # create a DMD class object
+            self.dlp = DMD()
+            # send wakeup to controller
+            self.dlp.wake_up()
+            #time.sleep(1)
+            # set to idle mode to preserve DMD lifetime
+            #self.dlp.idle_on()
+            #set led to 0
+            self.set_led_pwm(0)
+            # change to pattern on the fly mode
+            self.dlp.change_mode(3)
+            self.is_connected = True
+        except Exception as excpetion:
+            #self.write_message('warning',
+            #                   'No usb connection to projector at start up.')
+            #self.write_message('warning', str(excpetion))
+            #message_string = ('There is no connection to the DLP controler.\n' + 
+            #                  'Try to establish a connection to the DLP\n' +
+            #                  'by pressing the Standby/WakeUp Button.')
+            #self.write_message('warning', message_string)
+            #if tk.messagebox.askokcancel('DLP no Connection.',message_string):
+            #    pass
+            
+            self.is_connected = False
+            
         # write a function that pings the projector in a time intervall, which
         # prevents the usb connection from falling asleep
         # let it runs in a seperate process
@@ -1426,17 +1432,17 @@ class PycrafterGUI():
             self.message_listbox.itemconfig(tk.END, {'fg': textColor})
             
     def update_progressbar(self, current_step, maximum_step):
+        
         value = ((current_step+1)/maximum_step)*100
-        print(value)
+        
         self.progressbar['value'] = value
         self.Gui.update()
         time.sleep(1)
+        
         if value == 100:
             self.progressbar['value'] = 0
             self.Gui.update()
-        
-            
-        
+
     def create_widgets(self):
         """
         Creates the widgets of the pycrafter gui.
@@ -1572,6 +1578,13 @@ class PycrafterGUI():
          
          # let this function run once every second
         self.Gui.after(1000, self.gui_logic)
+        
+    def on_closing(self):
+        message_string = ('Do you want to quit?\n' +
+                          'Please make sure, that you set Lightcrafter\n' +
+                          'in Standby mode before closing the App!')
+        if tk.messagebox.askokcancel("Quit", message_string):
+            self.Gui.destroy()
         
     def keep_dlp_awake(self):
         """
