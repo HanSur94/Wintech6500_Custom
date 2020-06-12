@@ -1335,7 +1335,7 @@ class PycrafterGUI():
         self.btn_fg_disabled_cl = 'black'
         
         # to count for the listbox entries
-        self.listbox_character_length = 80
+        self.listbox_character_length = 120
         
         # variables for the gui logic
         self.is_data_loaded = False
@@ -1822,6 +1822,9 @@ class PycrafterGUI():
 
         """
         # depending on the used platform start MATLAB encoding app differently
+        self.write_message('action',('Make sure you have the MATLAB runtime ' +
+                                     'engine installed. Should work with' +
+                                     ' version R2017b.'))
         if sys.platform == 'win32':
             # on windoof
             self.write_message('action','Start MATLAB Encoding App.')
@@ -2004,6 +2007,10 @@ class PycrafterGUI():
 
             self.dlp.show_image_sequence_3(encoded, brightness, 
                                  exposures,  dark_times,        trigger_ins,trigger_outs, True) 
+            
+            
+    def start_image_sequence_2(self):
+        
         
 GUI = PycrafterGUI()
 sq = GUI.sequence_data
