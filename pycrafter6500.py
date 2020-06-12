@@ -1431,6 +1431,8 @@ class PycrafterGUI():
             self.message_listbox.itemconfig(tk.END, {'bg': bgColor})
             self.message_listbox.itemconfig(tk.END, {'fg': textColor})
             
+        self.Gui.update()
+            
     def update_progressbar(self, current_step, maximum_step):
         
         value = ((current_step+1)/maximum_step)*100
@@ -2138,8 +2140,9 @@ class PycrafterGUI():
                         print("\n- DISPLAY IMAGE -")
                         print('\ndisplay time: %f' %(display_time))
                         print('\nwaited time [s]: %f' %(wait_time))
+                        print('\n')
                     
-                    print('\n')
+                    
                     message_string = ('Displayed the image %d' %(index) + 
                                       'Real Exposure Time: %d' %(display_time)+
                                       'Real Dark Time: %d' %(wait_time))
@@ -2150,9 +2153,8 @@ class PycrafterGUI():
                 self.dlp.stop_sequence()
                 self.dlp.set_led_pwm(0)
                 
-                message_string = ('report',
-                                  'Finished to display Image Sequence.')
-                self
+                message_string = ('Finished to display Image Sequence.')
+                self.write_message('report', message_string)
         
         
 GUI = PycrafterGUI()
