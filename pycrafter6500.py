@@ -1366,9 +1366,11 @@ class PycrafterGUI():
         # write welcome message
         self.write_message('action','Hello and Welcome!')
         if self.is_connected == False:
-            self.write_message('warning','No Connection to the DLP controler.')
+            self.write_message('warning','No Connection to the DLP controler.'+
+                               ' If nothing helps, try to hard reset DLP.')
         else:
-            self.write_message('report','Connection to the DLP controler established.')
+            self.write_message('report',('Connection to the DLP controler' + 
+                                          ' established.'))
         self.gui_logic()
         self.Gui.protocol("WM_DELETE_WINDOW",self.on_closing)
         self.Gui.mainloop()
@@ -1565,7 +1567,7 @@ class PycrafterGUI():
          """   
          
          # let this function run once every second
-        self.Gui.after(1000, self.gui_logic)
+        self.Gui.after(100, self.gui_logic)
         
     def on_closing(self):
         message_string = ('Do you want to quit?\n' +
@@ -1651,6 +1653,25 @@ class PycrafterGUI():
         #self.load_image_sequence_data(True)
         
     def load_all_data(self, debug=True):
+        """
+        Loads relevant data from the sequence_param.txt file & images.
+
+        Parameters
+        ----------
+        debug : TYPE, optional
+            DESCRIPTION. The default is True.
+
+        Raises
+        ------
+        Exception
+            DESCRIPTION.
+
+        Returns
+        -------
+        TYPE
+            DESCRIPTION.
+
+        """
         
         self.sequence_data = []
         
@@ -1676,8 +1697,8 @@ class PycrafterGUI():
         for line in filtered_line:
             splitted_line = line.split(';')
             
-            # remove everything after 7th entry
-            del splitted_line[7:len(splitted_line)]
+            # remove everything after 8th entry
+            del splitted_line[8:len(splitted_line)]
             
             # save data in sequence data
             self.sequence_data.append(splitted_line)
@@ -1802,6 +1823,7 @@ class PycrafterGUI():
             self.sequence_data[index][4]  = int(image_data[4])
             self.sequence_data[index][5]  = int(image_data[5])
             self.sequence_data[index][6]  = int(image_data[6])
+            self.sequence_data[index][7]  = int(image_data[7])
         
         encoded_raw = []
         filtered_line= []
@@ -1809,6 +1831,16 @@ class PycrafterGUI():
         self.is_data_loaded = True
         self.write_message('report',('%d Images where loaded successfully.'
                                      %(len(self.sequence_data))))
+        
+    def check_data(self):
+        """
+        Checks that the loaded image sequence data is vali.
+
+        Returns
+        -------
+        None.
+        """
+        pass
         
         
     def encode_matlab(self):
@@ -2019,6 +2051,7 @@ class PycrafterGUI():
         dark_times = []
         trigger_ins = []
         trigger_outs = []
+        bit_depths = []
         image = []
         
         # only start when image data was encoded
@@ -2032,8 +2065,9 @@ class PycrafterGUI():
                 dark_times.append(image_data[4])
                 trigger_ins.append(image_data[5])
                 trigger_outs.append(image_data[6])
-                image.append(image_data[7])
-                encoded.append(image_data[8])
+                bit_depths.append(image_data[7])
+                image.append(image_data[8])
+                encoded.append(image_data[9])
                 
             print(brightness)
             print(exposures)
@@ -2052,7 +2086,8 @@ class PycrafterGUI():
             
             for index, enc in enumerate(encoded):
                 for j in range(0,2,1):
-                    self.dlp.define_pattern(index, exposures[index], 8, '100',
+                    self.dlp.define_pattern(index, exposures[index],
+                                            bit_depths[index],'100',
                                             trigger_ins[index],
                                             dark_times[index],
                                             trigger_outs[index], j, j)

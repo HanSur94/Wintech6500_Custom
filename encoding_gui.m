@@ -92,11 +92,6 @@ classdef encoding_gui < handle
             fid = fopen(filePath,'w');
             fprintf(fid,'First Line is always ignored\n');
             fclose(fid);
-
-            % overwrite cell once in the beginning if it already exist
-%             writecell({''},...
-%                     join([obj.directoryName,'/',obj.encodedFileName]),...
-%                 'Delimiter', ',','WriteMode','overwrite');
             
             % for each image, do encoding & save it in the
             tic;
@@ -121,11 +116,7 @@ classdef encoding_gui < handle
                 fclose(fid);
                 
             end
- 
-%             writecell(obj.encoded,...
-%                         join([obj.directoryName,'/',obj.encodedFileName]),...
-%                     'Delimiter', ',','WriteMode','append');
-
+            
             obj.updateTextField(sprintf(...
                 'Encoding done after %.3f [s]. Saved Encoding in %s.',...
                 toc,obj.encodedFileName));

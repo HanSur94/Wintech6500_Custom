@@ -1,5 +1,4 @@
-# name; index; brightness; exposure; dark_time; trigger_in; trigger_out;
-ti1.bmp; 1; 255; 10000000; 0; 0; 1;
-ti2.bmp; 1; 255; 10000000; 0; 0; 1;
-ti3.bmp; 1; 255; 10000000; 0; 0; 1;
-
+# name; index; brightness; exposure; dark_time; trigger_in; trigger_out; Bit depth;
+ti1.bmp; 1; 255; 10000000; 0; 0; 1; 8;
+ti2.bmp; 2; 255; 10000000; 0; 0; 1; 8;
+ti3.bmp; 3; 255; 10000000; 0; 0; 1; 8;
