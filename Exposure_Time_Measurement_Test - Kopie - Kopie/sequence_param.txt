@@ -1,4 +1,0 @@
-# name; index; brightness; exposure; dark_time; trigger_in; trigger_out;
-white_test_image_1.png; 1; 255; 10240000; 0; False; True;
-white_test_image_2.png; 2; 0; 10240000; 0; False; True;
-white_test_image_3.png; 3; 0; 10240000; 0; False; True;

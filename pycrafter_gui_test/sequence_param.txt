@@ -1,9 +1,0 @@
-# name; index; brightness; exposure; dark_time; trigger_in; trigger_out;
-test_image_sequence1.png; 1; 255; 1000000; 0; False; True;
-test_image_sequence2.png; 2; 255; 1000000; 0; False; True;
-test_image_sequence3.png; 3; 255; 1000000; 0; False; True;
-test_image_sequence4.png; 4; 255; 1000000; 0; False; True;
-test_image_sequence5.png; 5; 255; 1000000; 0; False; True;
-test_image_sequence6.png; 6; 255; 1000000; 0; False; True;
-test_image_sequence7.png; 7; 255; 1000000; 0; False; True;
-test_image_sequence8.png; 8; 255; 1000000; 0; False; True;

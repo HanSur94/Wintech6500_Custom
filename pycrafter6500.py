@@ -1312,6 +1312,16 @@ class PycrafterGUI():
         None.
 
         """
+        try:
+            self.dlp = DMD()
+            self.dlp.wake_up()
+            self.dlp.set_led_pwm(0)
+            self.dlp.change_mode(3)
+            self.is_connected = True
+        except:
+            self.is_connected = False
+            print('no connection')
+        
         # the parameters for the imagae sequences
         self.image_file_name_list = []
         self.sequence_param_file_name = "empty"
@@ -1341,10 +1351,10 @@ class PycrafterGUI():
         self.is_data_loaded = False
         self.is_idle = False
         self.is_encoded = False
-        self.is_connected = False
+        #self.is_connected = False
         
         # tkinter settings
-        self.windowDimension = "800x200"
+        self.windowDimension = "820x200"
         self.Gui = tk.Tk()
         self.Gui.title("PycrafterGUI")
         self.Gui.geometry(self.windowDimension)
@@ -1355,40 +1365,13 @@ class PycrafterGUI():
         self.set_dark_mode()
         # write welcome message
         self.write_message('action','Hello and Welcome!')
+        if self.is_connected == False:
+            self.write_message('warning','No Connection to the DLP controler.')
+        else:
+            self.write_message('report','Connection to the DLP controler established.')
         self.gui_logic()
         self.Gui.protocol("WM_DELETE_WINDOW",self.on_closing)
         self.Gui.mainloop()
-        
-        try:
-            # create a DMD class object
-            self.dlp = DMD()
-            # send wakeup to controller
-            self.dlp.wake_up()
-            #time.sleep(1)
-            # set to idle mode to preserve DMD lifetime
-            #self.dlp.idle_on()
-            #set led to 0
-            self.set_led_pwm(0)
-            # change to pattern on the fly mode
-            self.dlp.change_mode(3)
-            self.is_connected = True
-        except Exception as excpetion:
-            #self.write_message('warning',
-            #                   'No usb connection to projector at start up.')
-            #self.write_message('warning', str(excpetion))
-            #message_string = ('There is no connection to the DLP controler.\n' + 
-            #                  'Try to establish a connection to the DLP\n' +
-            #                  'by pressing the Standby/WakeUp Button.')
-            #self.write_message('warning', message_string)
-            #if tk.messagebox.askokcancel('DLP no Connection.',message_string):
-            #    pass
-            
-            self.is_connected = False
-            
-        # write a function that pings the projector in a time intervall, which
-        # prevents the usb connection from falling asleep
-        # let it runs in a seperate process
-        #self.keep_dlp_awake()
         
     def write_message(self, message_type, message_string):
  
@@ -1480,7 +1463,7 @@ class PycrafterGUI():
         # button for starting a sequence
         self.start_image_sequence_button = tk.Button(master=self.Gui,
                                                  text="Start Image Sequence",
-                        command=self.start_image_sequence)
+                        command=self.start_image_sequence_2)
         self.start_image_sequence_button.grid(column=1, row=4)
         
         # button for enable disable idle mode of the projector
@@ -1505,7 +1488,10 @@ class PycrafterGUI():
         
         
         # add a progressbar
-        self.progressbar = ttk.Progressbar(master=self.Gui,          orient="horizontal", mode="determinate", maximum=100, value=0)
+        self.progressbar = ttk.Progressbar(master=self.Gui,
+                                           orient="horizontal",
+                                           mode="determinate",
+                                           maximum=100, value=0)
         self.progressbar.grid(column=3,row=5)
 
         
@@ -1610,15 +1596,25 @@ class PycrafterGUI():
         None.
 
         """
-        if self.is_idle == False:
-            self.dlp.dmd_park()
-            self.dlp.stand_by()
-            self.is_idle = True
-        else:
-            self.dlp.wake_up()
-            self.dlp.dmd_unpark()
-            self.is_encoded = False
-            self.is_idle = False
+        try:
+            if self.is_idle == False:
+                #self.dlp.set_led_pwm(0)
+                self.dlp.dmd_park()
+                self.dlp.stand_by()
+                self.is_idle = True
+                self.write_message('report','DLP is now in standby mode.')
+                self.is_connected = True
+            else:
+                self.dlp.wake_up()
+                self.dlp.dmd_unpark()
+                self.dlp.set_led_pwm(0)
+                self.dlp.change_mode(3)
+                self.is_encoded = False
+                self.is_idle = False
+                self.is_connected = True
+                self.write_message('report','DLP is now awake.')
+        except Exception as exception:
+            self.write_message('warning', str(exception))
         
 
     def select_sequence_folder(self, debug=False):
@@ -1698,6 +1694,7 @@ class PycrafterGUI():
                     PIL.Image.open(self.sequence_folder_name + '/' +
                                    image_name),
                     dtype=numpy.uint8)
+                print(image_data)
             except Exception as exception:
                 self.write_message('warning', str(exception))
                 message_string = ('Image %s could not be found or loaded'%(image_name) + 
@@ -1717,7 +1714,7 @@ class PycrafterGUI():
                                 'the size of (1080,1920). Also they have' +
                                 'to be 8 Bit grayscale images.')
                 self.write_message('warning',message_string)
-                Exception(message_string)
+                #Exception(message_string)
                 self.is_data_loaded = False
                 self.is_encoded = False
             
@@ -1757,7 +1754,7 @@ class PycrafterGUI():
                     enc_raw_filtered = []
                     
                     for element in enc_raw_splitted:
-                        if not element == '' and not element == '\n' and not element == ' \n':
+                        if not element == '' and not element == '\n' and not element == ' \n' and not element == ' ':
                             enc_raw_filtered.append(element)
                             
                     encoded.append(list(map(int,enc_raw_filtered)))
@@ -1847,7 +1844,7 @@ class PycrafterGUI():
         # write data in "encoded_images.txt" and overwrite everything
         file_name = self.sequence_folder_name + '/encoded_images.txt'
         file = open(file_name,'w')
-        file.write('\n')
+        file.write('First Line will be ignored\n')
         file.close()
         
         # get already saved images
@@ -1884,6 +1881,8 @@ class PycrafterGUI():
             file.close()
             
             self.update_progressbar(index, len(self.sequence_data))
+            
+        self.is_encoded = True
             
             
     def encoding_image_sequence(self, debug=False):
@@ -1986,7 +1985,7 @@ class PycrafterGUI():
         trigger_outs = []
         image = []
         
-        if self.is_matlab_encoded:
+        if self.is_encoded:
         
             # convert the sequence data in a format for the dlp
             for image_data in self.sequence_data:
@@ -2044,117 +2043,118 @@ class PycrafterGUI():
             
             self.write_message('action', ('Start imaging process'+
                                           ' of %d images' %(len(encoded))))
-            
-            # start the imaging process with listbox messages & progressbar
-            for image_data in self.sequence_data:
-                
-                # stop any already existing sequence
-                self.dlp.stop_sequence()
-                self.dlp.set_led_pwm(0)
-                self.dlp.idle_off()
-                self.dlp.change_mode(3)
-                
-                for index, enc in enumerate(encoded):
-                    for j in range(0,2,1):
-                        self.define_pattern(index, exposures[index], 8, '100',
-                                                trigger_ins[index],
-                                                dark_times[index],
-                                                trigger_outs[index], j, j)
 
-                for index, enc in enumerate(encoded):
-                    
-                    display_time = 0
-                    wait_time = 0
-                    
-                    message_string = ('Image #%d with parameters:'%(index) +
-                                      'index: %d' %(index) +
-                                      'brightness: %d' %(brightness[index]) +
-                                      'exposure time : %d' %(exposures[index])+
-                                      'dark time: %d' %(dark_times[index]) +
-                                      'trigger in: %d' %trigger_ins[index]() + 
-                                      'trigger out: %d' %(trigger_outs[index]))
-                    
-                    self.write_message('action',message_string )
-                    
-                    """
-                    if debug:
-                        print("- DEBUG PARAMETERS -")
-                        print("\n image Index %d " % index)
-                        print('\n current image settings:')
-                        print('\n brightness: %d' % brightness[index])
-                        print('\n exposure [us]: %d' % exposures[index] )
-                        print('\n dark time [us]: %d' % dark_times[index])
-                        print('\n trigger in: %s' %  trigger_ins[index])
-                        print('\n trigger out: %s' % trigger_outs[index])
-                    """
-                        
-                    # Here we configure the look up table of the DMD
-                    # We say, how many images we have and that every image is
-                    # repeated just once
-                    self.dlp.configure_lut(len(encoded), 1)
-                    
-                    # Tell the DMD the sub index of the image, and how many
-                    # bytes it has
-                    self.dlp.set_bmp(0, len(enc))
-                    
-                    # Here we upload the encoded image
-                    self.dlp.load_bmp(enc, len(enc))
-                    
-                    # Set the LED Brightness to the specific value
-                    self.dlp.set_led_pwm(brightness[index])
-                    
-                    # start to display the image
-                    self.dlp.start_sequence()
-                    
-                    # start the time clock
-                    st = time.clock();
-                    
-                    # wait until the exposure time is over
-                    while display_time <= exposures[index]:
-                        display_time = (time.clock()-st)*1e6
-        
-                    # turn off the led & stop the sequence
-                    self.dlp.set_led_pwm(0)
-                    self.dlp.stop_sequence()
-                    
-                    # get the new start time for the dark times to come
-                    start_time = time.process_time()*1e6
-                    
-                    # wait until the dark time is over
-                    if dark_times[index] > 0:
-                        while wait_time <= dark_times[index]:
-                            wait_time = time.process_time()*1e6 - start_time
-                            #print(wait_time)
-                    
-                    # TODO: Do we really need this statement again?
-                    # again stop the sequence
-                    self.dlp.stop_sequence()
+            # stop any already existing sequence
+            self.dlp.stop_sequence()
+            self.dlp.set_led_pwm(0)
+            self.dlp.idle_off()
+            self.dlp.change_mode(3)
+            
+            for index, enc in enumerate(encoded):
+                for j in range(0,2,1):
+                    self.dlp.define_pattern(index, exposures[index], 8, '100',
+                                            trigger_ins[index],
+                                            dark_times[index],
+                                            trigger_outs[index], j, j)
+
+            for index, enc in enumerate(encoded):
                 
-                    start_time = time.process_time()*1e6
-                    
-                    # TODO Here again?? DEBUG this!!!
-                    while wait_time <= dark_times[index]:
-                        wait_time = time.process_time()*1e6 - start_time
-                    
-                    if debug:
-                        print("\n- DISPLAY IMAGE -")
-                        print('\ndisplay time: %f' %(display_time))
-                        print('\nwaited time [s]: %f' %(wait_time))
-                        print('\n')
-                    
-                    
-                    message_string = ('Displayed the image %d' %(index) + 
-                                      'Real Exposure Time: %d' %(display_time)+
-                                      'Real Dark Time: %d' %(wait_time))
-                    
-                    self.write_message('action',message_string)
-                    self.update_progressbar(index, len(encoded))
+                display_time = 0
+                wait_time = 0
                 
+                message_string = ('Image #%d with parameters; :'%(index) +
+                                  'index: %d; ' %(index) +
+                                  'brightness: %d; ' %(brightness[index]) +
+                                  'exposure time : %d; ' %(exposures[index])+
+                                  'dark time: %d; ' %(dark_times[index]) +
+                                  'trigger in: %d; ' %(trigger_ins[index]) + 
+                                  'trigger out: %d; ' %(trigger_outs[index]) )
+                
+                self.write_message('action',message_string)
+                
+                """
+                if debug:
+                    print("- DEBUG PARAMETERS -")
+                    print("\n image Index %d " % index)
+                    print('\n current image settings:')
+                    print('\n brightness: %d' % brightness[index])
+                    print('\n exposure [us]: %d' % exposures[index] )
+                    print('\n dark time [us]: %d' % dark_times[index])
+                    print('\n trigger in: %s' %  trigger_ins[index])
+                    print('\n trigger out: %s' % trigger_outs[index])
+                """
+                    
                 self.dlp.stop_sequence()
-                self.dlp.set_led_pwm(0)
                 
-                message_string = ('Finished to display Image Sequence.')
-                self.write_message('report', message_string)
+                # Here we configure the look up table of the DMD
+                # We say, how many images we have and that every image is
+                # repeated just once
+                self.dlp.configure_lut(len(encoded), 1)
+                
+                # Tell the DMD the sub index of the image, and how many
+                # bytes it has
+                self.dlp.set_bmp(0, len(enc))
+                
+                # Here we upload the encoded image
+                self.dlp.load_bmp(enc, len(enc))
+                
+                # Set the LED Brightness to the specific value
+                self.dlp.set_led_pwm(brightness[index])
+                
+                # start to display the image
+                self.dlp.start_sequence()
+                
+                # start the time clock
+                st = time.clock();
+                
+                # wait until the exposure time is over
+                while display_time <= exposures[index]:
+                    display_time = (time.clock()-st)*1e6
+    
+                # turn off the led & stop the sequence
+                self.dlp.set_led_pwm(0)
+                self.dlp.stop_sequence()
+                
+                # get the new start time for the dark times to come
+                st = time.clock();
+                
+                # wait until the dark time is over
+                if dark_times[index] > 0:
+                    while wait_time <= dark_times[index]:
+                        wait_time = (time.clock()-st)*1e6
+                        #print(wait_time)
+                
+                # TODO: Do we really need this statement again?
+                # again stop the sequence
+                self.dlp.stop_sequence()
+            
+                start_time = time.process_time()*1e6
+                
+                """
+                # TODO Here again?? DEBUG this!!!
+                while wait_time <= dark_times[index]:
+                    wait_time = time.process_time()*1e6 - start_time
+                """
+                
+                if debug:
+                    print("\n- DISPLAY IMAGE -")
+                    print('\ndisplay time: %f' %(display_time))
+                    print('\nwaited time [s]: %f' %(wait_time))
+                    print('\n')
+                
+                
+                message_string = ('Displayed the image %d; ' %(index) + 
+                                  'Real Exposure Time: %d; ' %(display_time)+
+                                  'Real Dark Time: %d; ' %(wait_time))
+                
+                self.write_message('action',message_string)
+                self.update_progressbar(index, len(encoded))
+            
+            self.dlp.stop_sequence()
+            self.dlp.set_led_pwm(0)
+            
+            message_string = ('Finished to display Image Sequence.')
+            self.write_message('report', message_string)
         
         
 GUI = PycrafterGUI()

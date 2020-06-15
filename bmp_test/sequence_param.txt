@@ -1,0 +1,4 @@
+# name; index; brightness; exposure; dark_time; trigger_in; trigger_out;
+testimage.bmp; 1; 255; 10000000; 0; 0; 1;
+8Bit_test_image.bmp; 1; 255; 10000000; 0; 0; 1;
+
